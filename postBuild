@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Get bendit and unpack
+curl -oL bendit_1.0.tar.gz https://github.com/r78v10a07/bendit/archive/1.0.tar.gz
+tar xvfz bendit_1.0.tar.gz
+rm bendit_1.0.tar.gz
+
+# Compile bendit
+cd bendit
+make
+
