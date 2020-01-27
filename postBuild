@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# Get bendit and unpack
-#curl -oL bendit_1.0.tar.gz https://github.com/r78v10a07/bendit/archive/1.0.tar.gz
-# URL for download based on gohugo-binder and the version number based on https://geraldonit.com/2019/01/15/how-to-download-the-latest-github-repo-release-via-command-line/
-#curl -L -o bendit_1.0.tar.gz  https://github.com/r78v10a07/bendit/releases/download/1.0.tar.gz
-#rm bendit_1.0.tar.gz
-
-#Get bendit
+# Get bendit
 git clone https://github.com/r78v10a07/bendit.git
 
 # Compile bendit
