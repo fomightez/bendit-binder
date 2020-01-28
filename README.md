@@ -5,8 +5,6 @@
 *tl;dr:*  
 Click any `launch bendit` badge on this page to run command line-based, standalone version of bend.it inside your browser.
 
-[Bend.it](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_intro) software to predict DNA curvature from DNA sequences combined with the Jupyter ecosystem served via MyBinder.org
-
 
 ------
 
