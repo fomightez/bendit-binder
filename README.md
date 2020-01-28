@@ -43,7 +43,7 @@ Usage
 
 If you are just trying to analyze a few sequences, go to the [the bend.it Server](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_form).
 
-This repository is set up to allow running the command line, standaline version of bend.it software after pressing the `launch binder` button above or below. 
+This repository is set up to allow running the command line, standaline version of bend.it software after pressing the `launch bendit` button above or below. 
 
 In the notebooks that can be launched, I have added some examples illustrating how to use the program and process the results easily with Python and convert to other forms.
 
