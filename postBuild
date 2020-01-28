@@ -11,7 +11,7 @@ git clone https://github.com/r78v10a07/bendit.git
 # need to add `-s` option to curl!!! To handle certificates I think
 # curl -sL -o thedl.tar.gz https://github.com/r78v10a07/bendit/archive/1.0.tar.gz
 # tar xzf thedl.tar.gz 
-# -OR COULD JUST DO download and tar in one step using pip.
+# -OR COULD JUST DO download and tar in one step using pipe.
 # curl -sL https://github.com/r78v10a07/bendit/archive/1.0.tar.gz | xz
 # HOWEVER, USING GIT TO STICK TO THE REPO SO ID UPDATED WITHOUT A RELEASE
 # I HAVE LATEST. Plus don't need to determine the version using git in the master branc.
