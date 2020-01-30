@@ -3,3 +3,4 @@ pyfaidx
 pandas
 matplotlib
 seaborn
+halo
