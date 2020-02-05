@@ -22,6 +22,51 @@ def write_string_to_file(s, fn):
     with open(fn, 'w') as output_file:
         output_file.write(s)
 
+def sanitize_description_lines(fn):
+    '''
+    User wants to be able to have slashes for part of a date stamp in the 
+    description lines. This scans FASTA file for description lines and removes
+    those slashes as they will interfere with using those names as tags in file
+    names. 
+    While at it going to remove and trailing whitspace at end so I can easily 
+    use the sample name derived from description line for tracking and not have
+    to worry about removing space for ease in use in file names and lose 
+    correspondence to actual pyfaidx keys for each sequecne.
+
+    Takes:
+    a file name
+
+    Returns:
+    Nothing but as part of process saves clean version of file as same name as
+    file name argument. NOTEL If nothing is encountered that needs cleaning, 
+    nothing is done to input file.
+    '''
+    anything_needing_sanitizing_encountered = False
+    collecting_content_string = ""
+    with open(fn, 'r') as input:
+        for line in input:
+            if line.startswith(">"):
+                if "/" in line:
+                    line = line.replace("/","-")
+                    anything_needing_sanitizing_encountered = True
+                    line = line.strip() + "\n" #might as well remove any trailing 
+                    # space as well while handling slashes because no harm if 
+                    # moot & then don't need to check that line again in any way 
+                    # to rule if possesses trailing space.
+                    collecting_content_string += line
+                elif line.endswith(" "):
+                    line = line.strip() + "\n" #remove trailing space
+                    anything_needing_sanitizing_encountered = True
+                    line = line.strip() + "\n" #remove trailing space
+                    collecting_content_string += line
+                else:
+                    collecting_content_string += line
+            else:
+                    collecting_content_string += line
+    # replace input file if any sanitizing occured.
+    if anything_needing_sanitizing_encountered:
+        %store collecting_content_string >{fn}
+
 def chunk_string(string, chunk_size):
     """Return a list of n-sized chunks from string of letters."""
     return [string[i:i+chunk_size] for i in range(0, len(string),chunk_size)] 
@@ -48,7 +93,7 @@ def divide_up_any_additional_sets(f,character_to_mark_name_end):
 
     This only works on a file where the first label in the first line has
     already been removed so the first line in the current file starts with a 
-    description line. It relies on the seqeunces in the input file requested
+    description line. It relies on the sequences in the input file requested
     by the user being short (or at least all on one line) and the fact the
     inclusion of the labelwould disrupt the cycle that starts with the
     description line and then is a sequence line and then another description
@@ -194,6 +239,12 @@ file_name_substitutions_to_make = {} # this will be used if non-standard input
 additional_sequence_files = [] # This will get used if non-standard input file #
 # used with labels more interal beyond just the first line
 for x in sequence_files:
+    # Sanitize description lines to accommodate user wanting to include date 
+    # stamps with forward slashes as part of FASTA description lines. 
+    # Sanitizing will make it possible to use this as part of a file name 
+    # more easily in order to easily track sequences and results throughout.
+    # Also going to remove line-ending spaces while at it just to be cleaner.
+    sanitize_description_lines(x)
     # determine if label for the name of the sample set is on first line or if
     # using file name or defined `sample_set_name`
     if sample_set_name_extract_auto:
@@ -363,24 +414,53 @@ for x in sequence_files:
                      color="C1",
                      ax=ax2)
                      '''
-        sns.lineplot(x=df1.Position,
-                    y=df1.Predicted_curvature,
-                    label="Curvature",
-                    linewidth=1.9,
-                    #color="C0",
-                    color="xkcd:cerulean", #see 
-                    # https://matplotlib.org/tutorials/colors/colors.html and 
-                    # https://xkcd.com/color/rgb/
-                    ax=ax1)
-        sns.lineplot(x=df1.Position, 
-                     y=df1.Bendability,
-                     label="Bendability",
-                     linewidth=1.9,
-                     #color="C1",
-                     color="xkcd:orange", #see 
-                    # https://matplotlib.org/tutorials/colors/colors.html and 
-                    # https://xkcd.com/color/rgb/
-                     ax=ax1)
+        if smooth_plot_curves:
+            # use of Akima1DInterpolator based on UPDATE#2 at 
+            # https://stackoverflow.com/a/37223558/8508004 and seems to match
+            # fairly well to Excel's 'Scatter with Smooth Lines' option
+            import numpy as np
+            from scipy.interpolate import Akima1DInterpolator
+            akima1 = Akima1DInterpolator(df1.Position, df1.Predicted_curvature)
+            akima2 = Akima1DInterpolator(df1.Position, df1.Bendability)
+            x_4smooth = np.linspace(
+                min(df1.Position), len(merged_sequence), 1000)
+            sns.lineplot(x=x_4smooth,
+                        y=akima1(x_4smooth),
+                        label="Curvature",
+                        linewidth=1.9,
+                        #color="C0",
+                        color="xkcd:cerulean", #see 
+                        # https://matplotlib.org/tutorials/colors/colors.html and 
+                        # https://xkcd.com/color/rgb/
+                        ax=ax1)
+            sns.lineplot(x=x_4smooth, 
+                         y=akima2(x_4smooth),
+                         label="Bendability",
+                         linewidth=1.9,
+                         #color="C1",
+                         color="xkcd:orange", #see 
+                        # https://matplotlib.org/tutorials/colors/colors.html and 
+                        # https://xkcd.com/color/rgb/
+                         ax=ax1)
+        else:
+            sns.lineplot(x=df1.Position,
+                        y=df1.Predicted_curvature,
+                        label="Curvature",
+                        linewidth=1.9,
+                        #color="C0",
+                        color="xkcd:cerulean", #see 
+                        # https://matplotlib.org/tutorials/colors/colors.html and 
+                        # https://xkcd.com/color/rgb/
+                        ax=ax1)
+            sns.lineplot(x=df1.Position, 
+                         y=df1.Bendability,
+                         label="Bendability",
+                         linewidth=1.9,
+                         #color="C1",
+                         color="xkcd:orange", #see 
+                        # https://matplotlib.org/tutorials/colors/colors.html and 
+                        # https://xkcd.com/color/rgb/
+                         ax=ax1)
         # getting both legends as one based on http://matplotlib.1069221.n5.nabble.com/legend-and-twiny-td14497.html
         #handles1, labels1 = ax1.get_legend_handles_labels()
         #handles2, labels2 = ax2.get_legend_handles_labels()
@@ -398,6 +478,18 @@ for x in sequence_files:
 
         right_side_buffer = 0
         plt.xlim(0, len(merged_sequence)+right_side_buffer)
+
+        # add slashes back if date stamp recognized and setting 
+        # `show_date_with_slashes_in_plot_title` is True
+        if show_date_with_slashes_in_plot_title and (
+            sequence.name.count("|") >= 2) and (
+            sequence.name.split("|")[1].split("|")[0].count("-") >= 3):
+            title_text = sequence.name.split(
+                "|")[0] + sequence.name.split("|")[0].replace(
+                "-","/") + sequence.name.split("|",2)[2]
+        else:
+            title_text = sequence.name
+
 
         #plt.title(f"{sequence.name}",color="#333333",fontsize = 16)
         #plt.title(f"{sequence.name}",color="#333333",fontsize = 'large', fontweight='bold')
