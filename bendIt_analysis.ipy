@@ -78,12 +78,12 @@ def sanitize_description_lines(fn):
         #!cp fn unsanitized_{fn} #cannot use in function, like `%store` because
         # actually run in global namespace which cannot see Python variable `fn`
         # local to the function
-        sanitized_fn_name = f"unsanitized_{fn}.txt"
+        sanitized_fn_name = f"unsanitized_input_{fn}.txt"
         from shutil import copyfile
         copyfile(fn, sanitized_fn_name) #adding extension means it won't get 
         # recognized as a FASTA if script is run again
         sys.stderr.write(f"The original input was saved as "
-        	"'{sanitized_fn_name}' because characters\nin the description line "
+        	"'{sanitized_fn_name}' because characters\nin description line "
         	"needed replacing in order to\nbe properly processed by this "
         	"script & bendIt.")
         write_string_to_file(collecting_content_string, fn)
@@ -423,8 +423,14 @@ for x in sequence_files:
             !curl -OL https://raw.githubusercontent.com/fomightez/sequencework/master/bendit_standalone-utilities/{file_needed}
         # convert to a dataframe
         from bendit_standalone_results_to_df import bendit_standalone_results_to_df
-        df1,df2 = bendit_standalone_results_to_df(output_file_suffix,"Bendability",sequence_file=fasta_file_name_for_merged,pickle_df=True) # don't pickle in external script call because want to pickle and save tab-delimited files back here where can incoporate the sample names
-        # add the dataframes and and saved files to a collection of files produced
+        df = bendit_standalone_results_to_df(
+            output_file_suffix,
+            "Bendability",
+            sequence_file=fasta_file_name_for_merged,
+            pickle_df=True) # don't pickle in external script call because 
+        # want to pickle and save tab-delimited files here where can incoporate 
+        # the sample name & add the dataframe and and saved files to a 
+        # collection of files produced
 
         import seaborn as sns
         import matplotlib.pyplot as plt
@@ -432,12 +438,12 @@ for x in sequence_files:
         fig, ax1 = plt.subplots(figsize=(8,4))
         #ax2 = ax1.twinx() #Nathan is plotting on same y-axis
         '''
-        sns.lineplot(x=df1.Position,
-                    y=df1.Predicted_curvature,
+        sns.lineplot(x=df.Position,
+                    y=df.Predicted_curvature,
                     color="C0",
                     ax=ax1)
-        sns.lineplot(x=df1.Position, 
-                     y=df1.Bendability,
+        sns.lineplot(x=df.Position, 
+                     y=df.Bendability,
                      color="C1",
                      ax=ax2)
                      '''
@@ -447,10 +453,10 @@ for x in sequence_files:
             # fairly well to Excel's 'Scatter with Smooth Lines' option
             import numpy as np
             from scipy.interpolate import Akima1DInterpolator
-            akima1 = Akima1DInterpolator(df1.Position, df1.Predicted_curvature)
-            akima2 = Akima1DInterpolator(df1.Position, df1.Bendability)
+            akima1 = Akima1DInterpolator(df.Position, df.Predicted_curvature)
+            akima2 = Akima1DInterpolator(df.Position, df.Bendability)
             x_4smooth = np.linspace(
-                min(df1.Position), len(merged_sequence), 1000)
+                min(df.Position), len(merged_sequence), 1000)
             sns.lineplot(x=x_4smooth,
                         y=akima1(x_4smooth),
                         label="Curvature",
@@ -470,8 +476,8 @@ for x in sequence_files:
                         # https://xkcd.com/color/rgb/
                          ax=ax1)
         else:
-            sns.lineplot(x=df1.Position,
-                        y=df1.Predicted_curvature,
+            sns.lineplot(x=df.Position,
+                        y=df.Predicted_curvature,
                         label="Curvature",
                         linewidth=1.9,
                         #color="C0",
@@ -479,8 +485,8 @@ for x in sequence_files:
                         # https://matplotlib.org/tutorials/colors/colors.html and 
                         # https://xkcd.com/color/rgb/
                         ax=ax1)
-            sns.lineplot(x=df1.Position, 
-                         y=df1.Bendability,
+            sns.lineplot(x=df.Position, 
+                         y=df.Bendability,
                          label="Bendability",
                          linewidth=1.9,
                          #color="C1",
