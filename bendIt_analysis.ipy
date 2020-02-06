@@ -78,9 +78,14 @@ def sanitize_description_lines(fn):
         #!cp fn unsanitized_{fn} #cannot use in function, like `%store` because
         # actually run in global namespace which cannot see Python variable `fn`
         # local to the function
+        sanitized_fn_name = f"unsanitized_{fn}.txt"
         from shutil import copyfile
-        copyfile(fn, f"unsanitized_{fn}.txt") #adding extension means it won't 
-        # get recognized as a FASTA if things are run again
+        copyfile(fn, sanitized_fn_name) #adding extension means it won't get 
+        # recognized as a FASTA if script is run again
+        sys.stderr.write(f"The original input was saved as "
+        	"'{sanitized_fn_name}' because characters\nin the description line "
+        	"needed replacing in order to\nbe properly processed by this "
+        	"script & bendIt.")
         write_string_to_file(collecting_content_string, fn)
 
 def chunk_string(string, chunk_size):
