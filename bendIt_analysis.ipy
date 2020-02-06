@@ -17,7 +17,7 @@ fasta_extensions = ("fa", "fasta", "faa", "fas", "fsa")
 
 def write_string_to_file(s, fn):
     '''
-    Takes a string and a name for a file and writes the string to the file.
+    Takes a string, `s`, and a name for a file & writes the string to the file.
     '''
     with open(fn, 'w') as output_file:
         output_file.write(s)
@@ -27,11 +27,18 @@ def sanitize_description_lines(fn):
     User wants to be able to have slashes for part of a date stamp in the 
     description lines. This scans FASTA file for description lines and removes
     those slashes as they will interfere with using those names as tags in file
-    names. 
+    names. (example description line with problem: `R5|11/23/19|16(4) `)
     While at it going to remove and trailing whitspace at end so I can easily 
     use the sample name derived from description line for tracking and not have
     to worry about removing space for ease in use in file names and lose 
-    correspondence to actual pyfaidx keys for each sequecne.
+    correspondence to actual pyfaidx keys for each sequence.
+
+    Extra sanitizing added when I found bendIt/bash didn't work with `|` or 
+    parantheses in the file names which I was using the description line as.
+    Will use position of closing paranthesis at end to get away using same 
+    indicator character for both since running out of unusual characters to use.
+    Use of `+` from https://superuser.com/questions/358855/what-characters-are-safe-in-cross-platform-file-names-for-linux-windows-and-os
+    Example shown above gets sanitized to `R5_11-23-19_16+4+`
 
     Takes:
     a file name
@@ -48,6 +55,9 @@ def sanitize_description_lines(fn):
             if line.startswith(">"):
                 if "/" in line:
                     line = line.replace("/","-")
+                    line = line.replace("|","_")
+                    line = line.replace("(","+")
+                    line = line.replace(")","+")
                     anything_needing_sanitizing_encountered = True
                     line = line.strip() + "\n" #might as well remove any trailing 
                     # space as well while handling slashes because no harm if 
@@ -65,7 +75,13 @@ def sanitize_description_lines(fn):
                     collecting_content_string += line
     # replace input file if any sanitizing occured.
     if anything_needing_sanitizing_encountered:
-        %store collecting_content_string >{fn}
+        #!cp fn unsanitized_{fn} #cannot use in function, like `%store` because
+        # actually run in global namespace which cannot see Python variable `fn`
+        # local to the function
+        from shutil import copyfile
+        copyfile(fn, f"unsanitized_{fn}.txt") #adding extension means it won't 
+        # get recognized as a FASTA if things are run again
+        write_string_to_file(collecting_content_string, fn)
 
 def chunk_string(string, chunk_size):
     """Return a list of n-sized chunks from string of letters."""
@@ -367,7 +383,13 @@ for x in sequence_files:
         #!echo {merged_sequence_made_to_fasta} > {fasta_file_name_for_merged} 
         # above uses shell b/c magics like `%store` work poor when in a function 
         # and considering may move to a function later
-        %store merged_sequence_made_to_fasta >{fasta_file_name_for_merged} #it 
+        #Switching from using `%store` command seen below to this line when bash 
+        # was choking on file names like `R5|11-1-19|1(1)_merged.fasta` that was 
+        # derived from what a user needed in the description line to indicate 
+        # the sample.
+        write_string_to_file(
+            merged_sequence_made_to_fasta, fasta_file_name_for_merged)
+        #%store merged_sequence_made_to_fasta >{fasta_file_name_for_merged} #it 
         # is important to not have a space after  redirect; apparently recent 
         # change (because I only noted in Jan. 2020) now reflected in 
         # documentation at 
@@ -479,21 +501,32 @@ for x in sequence_files:
         right_side_buffer = 0
         plt.xlim(0, len(merged_sequence)+right_side_buffer)
 
-        # add slashes back if date stamp recognized and setting 
-        # `show_date_with_slashes_in_plot_title` is True
+        # add slashes, |, and parenthese back of special description line 
+        # pattern recognized from the sanitized pattern. In other words, make 
+        # the title text look like the actual input description line that 
+        # includes date stamp in user special case example `R5|11/23/19|16(4)`,
+        # which gets sanitized to `R5_11-23-19_16+4+`
         if show_date_with_slashes_in_plot_title and (
-            sequence.name.count("|") >= 2) and (
-            sequence.name.split("|")[1].split("|")[0].count("-") >= 3):
+            sequence.name.count("_") == 2) and (
+            sequence.name.split("_")[1].split("_")[0].count("-") == 2) and (
+            sequence.name.split("_",2)[2].count("+") == 2) and (
+            sequence.name.endswith("+")):
             title_text = sequence.name.split(
-                "|")[0] + sequence.name.split("|")[0].replace(
-                "-","/") + sequence.name.split("|",2)[2]
+                "_")[0]+"|" + sequence.name.split("_")[1].replace(
+                "-","/") +"|" + sequence.name.split("_",2)[2]
+            #restore parantheses near end too. Can use fact `+` at end to
+            # to specify closing parantheses. So position of the `+` used to 
+            # enable using `+` as a symbol for two different characters.
+            if title_text.endswith("+") and "+" in title_text[:-1]:
+                title_text = title_text[:-1] + ")"
+                title_text = title_text.replace("+","(")
         else:
             title_text = sequence.name
 
 
         #plt.title(f"{sequence.name}",color="#333333",fontsize = 16)
         #plt.title(f"{sequence.name}",color="#333333",fontsize = 'large', fontweight='bold')
-        plt.title(f"{sequence.name}",color="#333333",fontsize = 15, fontweight='bold')
+        plt.title(f"{title_text}",color="#333333",fontsize = 15, fontweight='bold')
 
         plt.show()
         sns.set()
