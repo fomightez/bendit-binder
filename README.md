@@ -15,7 +15,7 @@ Click any `launch bendit` badge on this page to run command line-based, standalo
 If you are just trying to analyze a few sequences, go to the [the bend.it Server](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_form).
 
 This repository is for running a command line-based, standalone version of bend.it inside your browser in a Jupyter environment provided by [MyBinder.org](https://mybinder.org/).  
-Additionally, having bend.it working inside the Jupyter environment with interactive Python adds some convenient features that are illustrated. I hope to add a utility script or two for moving command line-based bend.it results into Python and perhaps full-featured, modern and interactive plotting as discussed [here](https://berthub.eu/articles/posts/from-gnuplot-to-matplotlib-pandas/).  
+Additionally, having bend.it working inside the Jupyter environment with interactive Python adds some convenient features that are illustrated.  A utility script for moving command line-based bendIt results into Python is demonstrated and the pipelint illustrates adding in more full-featured, modern and interactive plotting as discussed [here](https://berthub.eu/articles/posts/from-gnuplot-to-matplotlib-pandas/).  
 
 -------
 
@@ -34,6 +34,8 @@ Nucleic Acids Res. 2003 31(13), pg. 3686-3687. [PMID: 12824394](https://www.ncbi
 
 
 ***Clarifying Software Attribution: I, Wayne, am not involved in the bend.it software at all. Those listed above are the developers and distributors of bend.it. See their materials. I simply set up this repository to make the software useable on the command line reproducibly without installation headaches.***
+
+I, Wayne, did code a Python-based utility for use with the results from the standalone version of bendIT; it is available [here](https://github.com/fomightez/sequencework/tree/master/bendit_standalone-utilities/) and utilized in the notebooks in this repository to process the results and allow easily converting the results to other forms.
 
 
 Usage
