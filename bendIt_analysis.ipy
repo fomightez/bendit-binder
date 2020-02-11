@@ -3,20 +3,15 @@ import sys
 import pandas as pd
 import pyfaidx
 from halo import Halo
+from IPython.utils import io
+import fnmatch
+import datetime
 
 demo_file_name = "demo_sample_set.fa"
 
 fasta_extensions = ("fa", "fasta", "faa", "fas", "fsa")
 
 
-curvature_window_size,other_metric_reporting_window_size =(
-window_size,window_size) #because the window size gets used for short sequences 
-# to determine what to plot, it is best if these are linked and the same. In 
-# development, I was letting them be set different
-# early on like the bend.it server does but this script does some handling 
-# behind-the-scenes to get things to work with short sequences, and best to lock
-# into single value, and so this insures now they are, but doesn't make me 
-# change code used below here.
 
 
 
@@ -53,7 +48,7 @@ def sanitize_description_lines(fn):
 
     Returns:
     Nothing but as part of process saves clean version of file as same name as
-    file name argument. NOTEL If nothing is encountered that needs cleaning, 
+    file name argument. NOTE: If nothing is encountered that needs cleaning, 
     nothing is done to input file.
     '''
     anything_needing_sanitizing_encountered = False
@@ -215,6 +210,24 @@ report_with_curvature_settings_corrspndnce = {
 #So in command it would be like:
 # !bendIt -s test.fa -o result.txt -g {report_with_curvature_settings_corrspndnce[report_with_curvature]}
 
+# a similar correspondance for giving dataframe columns names
+results_to_df_corrspndnce= {
+    "G+Ccontent" : "GCcontent",
+    "bendability" : "Bendability",
+    "complexity" : "Conplexity"
+}
+
+curvature_window_size,other_metric_reporting_window_size =(
+window_size,window_size) #because the window size gets used for short sequences 
+# to determine what to plot, it is best if these are linked and the same. In 
+# development, I was letting them be set different
+# early on like the bend.it server does but this script does some handling 
+# behind-the-scenes to get things to work with short sequences, and best to lock
+# into single value, and so this insures now they are, but doesn't make me 
+# change code used below here.
+
+log_file_text = ""
+
 
 
 
@@ -248,6 +261,8 @@ else:
     sys.stderr.write("Processing {} files: {}"
     ".".format(len(sequence_files),repr(sequence_files)))
 files_produced = []
+dataframes_produced = []
+plot_list = []
 # Go through list of sequence_files and check if these are standard FASTA or if
 # combine sample set label(s) and FASTA record(s). Although the most noticeable 
 # feature of this situation is that there is a label at the first line of the
@@ -421,31 +436,34 @@ for x in sequence_files:
         # for development for them to plot the data of interest.
         end_range = len(merged_sequence) - curvature_window_size
         output_file_suffix = f"{sequence.name}_output"
-        !bendIt -s {fasta_file_name_for_merged} -o {output_file_suffix} -c \
-        {curvature_window_size} -b {other_metric_reporting_window_size} \
-        -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
-        --xmin {curvature_window_size} --xmax {end_range}
+        with io.capture_output() as captured:
+            !bendIt -s {fasta_file_name_for_merged} -o {output_file_suffix} -c \
+            {curvature_window_size} -b {other_metric_reporting_window_size} \
+            -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
+            --xmin {curvature_window_size} --xmax {end_range}
 
         #check for script to send bendit standalone results to dataframe(s) and
         # retrieve if not already here
         # Get a file if not yet retrieved / check if file exists
-        file_needed = "bendit_standalone_results_to_df.py"
-        if not os.path.isfile(file_needed):
-            !curl -OL https://raw.githubusercontent.com/fomightez/sequencework/master/bendit_standalone-utilities/{file_needed}
+            file_needed = "bendit_standalone_results_to_df.py"
+            if not os.path.isfile(file_needed):
+                !curl -OL https://raw.githubusercontent.com/fomightez/sequencework/master/bendit_standalone-utilities/{file_needed}
 
         # convert to a dataframe
-        from bendit_standalone_results_to_df import bendit_standalone_results_to_df
-        df = bendit_standalone_results_to_df(
-            output_file_suffix,
-            "Bendability",
-            sequence_file=fasta_file_name_for_merged,
-            pickle_df=False) # Don't pickle in external script call because 
-        # want to pickle and save tab-delimited files here where can incoporate 
-        # the sample name & add the dataframe and and saved files to a 
-        # collection of files produced. Plus, what is made when short sequences
-        # is artifically long to get past segmetnation fault issue & neds to be 
-        # fixed at right-had end and so that is a further reason to wait and 
-        # handle anything along those lines here.
+            from bendit_standalone_results_to_df import bendit_standalone_results_to_df
+            df = bendit_standalone_results_to_df(
+                output_file_suffix,
+                results_to_df_corrspndnce[report_with_curvature],
+                sequence_file=fasta_file_name_for_merged,
+                pickle_df=False) # Don't pickle in external script call because 
+            # want to pickle and save tab-delimited files here where can incoporate 
+            # the sample name & add the dataframe and and saved files to a 
+            # collection of files produced. Plus, what is made when short sequences
+            # is artifically long to get past segmetnation fault issue & neds to be 
+            # fixed at right-had end and so that is a further reason to wait and 
+            # handle anything along those lines here.
+        log_file_text += captured.stdout
+        log_file_text += captured.stderr
 
         # If the sequence had to be lengthened at the right-hand side 
         # (downstream end/ 3'-end) to avoid segmentation fault when bendIt 
@@ -471,16 +489,19 @@ for x in sequence_files:
                 fasta_file_name_for_other_end)
             start_like_unadded = (cutoff_for_adding - len(merged_sequence))
             output_file_suffixOE = f"{sequence.name}OE_output"
-            !bendIt -s {fasta_file_name_for_other_end} -o \
-            {output_file_suffixOE} -c \
-            {curvature_window_size} -b {other_metric_reporting_window_size} \
-            -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
-            --xmin {start_like_unadded}
-            df_oth = bendit_standalone_results_to_df(
-                output_file_suffixOE,
-                "Bendability",
-                sequence_file=fasta_file_name_for_other_end,
-                pickle_df=False)
+            with io.capture_output() as captured:
+                !bendIt -s {fasta_file_name_for_other_end} -o \
+                {output_file_suffixOE} -c \
+                {curvature_window_size} -b {other_metric_reporting_window_size} \
+                -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
+                --xmin {start_like_unadded}
+                df_oth = bendit_standalone_results_to_df(
+                    output_file_suffixOE,
+                    results_to_df_corrspndnce[report_with_curvature],
+                    sequence_file=fasta_file_name_for_other_end,
+                    pickle_df=False)
+            log_file_text += captured.stdout
+            log_file_text += captured.stderr
             # need to remove the 'front' additional from this dataframe
             df_oth = df_oth[start_like_unadded:].reset_index(drop=True)
             # `reset_index` takes care of index being shifted when remove the
@@ -527,7 +548,7 @@ for x in sequence_files:
         fig, ax1 = plt.subplots(figsize=(8,4))
 
         if report_with_curvature == "bendability":
-            #ax2 = ax1.twinx() #Nathan is plotting on same y-axis
+            #ax2 = ax1.twinx() #Nathan is plotting bendability and curvature on same y-axis which won't work with the other two since their range is so low
             '''
             sns.lineplot(x=df.Position,
                         y=df.Predicted_curvature,
@@ -585,7 +606,11 @@ for x in sequence_files:
                             # https://matplotlib.org/tutorials/colors/colors.html and 
                             # https://xkcd.com/color/rgb/
                              ax=ax1)
+            plt.legend()
         else:
+            # Note that here I use the columns for the other reported metric 
+            # by referencing the end of the columns list because the first few
+            # columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
             # so plot on secondary y-axis
             if smooth_plot_curves:
@@ -595,7 +620,7 @@ for x in sequence_files:
                 import numpy as np
                 from scipy.interpolate import Akima1DInterpolator
                 akima1 = Akima1DInterpolator(df.Position, df.Predicted_curvature)
-                akima2 = Akima1DInterpolator(df.Position, df[df.columns[-2]])
+                akima2 = Akima1DInterpolator(df.Position, df[df.columns[-1]])
                 x_4smooth = np.linspace(
                     min(df.Position), len(merged_sequence), 1000)
                 sns.lineplot(x=x_4smooth,
@@ -609,7 +634,7 @@ for x in sequence_files:
                             ax=ax1)
                 sns.lineplot(x=x_4smooth, 
                              y=akima2(x_4smooth),
-                             label=df.columns[-2],
+                             label=df.columns[-1],
                              linewidth=1.9,
                              color="xkcd:orange", #see 
                             # https://matplotlib.org/tutorials/colors/colors.html and 
@@ -622,8 +647,8 @@ for x in sequence_files:
                             color="xkcd:cerulean",
                             ax=ax1)
                 sns.lineplot(x=df.Position, 
-                             y=df.columns[-2],
-                             label=df.columns[-2],
+                             y=df.columns[-1],
+                             label=df.columns[-1],
                              color="xkcd:orange",
                              ax=ax2)
             # getting both legends as one based on http://matplotlib.1069221.n5.nabble.com/legend-and-twiny-td14497.html
@@ -636,9 +661,21 @@ for x in sequence_files:
             #h2, l2 = ax2.get_legend_handles_labels()
             #ax1.legend(h1+h2, l1+l2, loc=2)
 
+            # based on https://stackoverflow.com/questions/5484922/secondary-axis-with-twinx-how-to-add-to-legend
             #ax1.legend(loc=0)
-            #ax2.legend(loc=1)
-            plt.legend()
+            #ax2.legend(loc=1) 
+            
+            #legends for both lines made automatically, based on https://stackoverflow.com/a/47370214/8508004
+            fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax.transAxes)
+            # While the gathered legends works, it seems when using seaborn
+            # the legends from each of the two axes show up on the plot over each other 
+            # still. Can use the code described at https://stackoverflow.com/a/54782540/8508004
+            # along with the addition in the comment by Mihai Cherlau to hide 
+            # those. (also see https://stackoverflow.com/a/38136752/8508004 )
+            # Note: before deleting can use `dir(ax1.legend_)` to see all 
+            # attributes and methods associated with the seaborn `legend_`.
+            ax1.legend_.remove()
+            ax2.legend_.remove()
         plt.ylabel("");
 
         right_side_buffer = 0
@@ -728,6 +765,24 @@ for x in sequence_files:
 
     if include_gnuplots:
             pass
+
+# PACKAGE UP LOG AND RESULTS FOR ALL:
+#--------------------------------------------------------------------------#
+
+now = datetime.datetime.now()
+
+# collect all the unsantized input files if there are any
+files_pattern_at_start_of_name = "unsanitized_input_"
+unsanitized_input_fns= []
+for file in os.listdir('.'):
+    if fnmatch.fnmatch(file, files_pattern_at_start_of_name+'*'):
+        unsanitized_input_fns.append(file)
+
+if include_gnuplots:
+        pass
+
+write_string_to_file(log_file_text, 
+    f"LOG_ba{now.strftime('%b%d%Y%H%M')}.txt")
     
 
 spinner.stop()
