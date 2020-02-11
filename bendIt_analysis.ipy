@@ -226,7 +226,8 @@ window_size,window_size) #because the window size gets used for short sequences
 # into single value, and so this insures now they are, but doesn't make me 
 # change code used below here.
 
-log_file_text = ""
+log_file_text = ("####BELOW IS LOG of std.out and std.err from bendit "
+    "analysis: ######\n\n")
 
 
 
