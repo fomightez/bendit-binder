@@ -149,9 +149,9 @@ def sanitize_description_lines(fn,delimiter_character):
         copyfile(fn, sanitized_fn_name) #adding extension means it won't get 
         # recognized as a FASTA if script is run again
         sys.stderr.write(f"The original input was saved as "
-        	"'{sanitized_fn_name}' because characters\nin description line "
-        	"needed replacing in order to\nbe properly processed by this "
-        	"script & bendIt.")
+            "'{sanitized_fn_name}' because characters\nin description line "
+            "needed replacing in order to\nbe properly processed by this "
+            "script & bendIt.")
         write_string_to_file(collecting_content_string, fn)
 
 def chunk_string(string, chunk_size):
@@ -751,9 +751,9 @@ for x in sequence_files:
                              ax=ax1)
             plt.legend()
         else:
-        	# Note that here I use the columns for the other reported metric 
-        	# by referencing the end of the columns list because the first few
-        	# columns may be different depending if sequence was included.
+            # Note that here I use the columns for the other reported metric 
+            # by referencing the end of the columns list because the first few
+            # columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
             # so plot on secondary y-axis; use of secondary y-axis with seaborn based on 
             # https://towardsdatascience.com/a-step-by-step-guide-for-creating-advanced-python-data-visualizations-with-seaborn-matplotlib-1579d6a1a7d0
@@ -1049,7 +1049,10 @@ sys.stderr.write("*****************DONE***********************************\n"
     "*****************DONE***********************************".format(
     archive_file_name))
     
-# Delete the files that have been archived
+# Delete the files that have been archived (except leave the demo sequence file 
+# so that development example can be run again easily)
+if demo_file_name in files_produced:
+    files_produced.remove(demo_file_name)
 for ef in files_produced:
     !rm {ef}
 # Delete the `temp` files from the making of the dataframes step; they were used 
