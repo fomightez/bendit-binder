@@ -49,10 +49,11 @@ def out2_stderr_n_log(s,log_file_text):
     Takes a string as input and sends it to the stderr as well as to a building
     string that will everntually get saved as a Log file.
     Also needs the Log file to be sent in because gets assigned within the
-    function in order to add to it.
+    function in order to add to it. Returns the modified `log_file_text`.
     '''
     sys.stderr.write(s)
     log_file_text += s
+    return log_file_text
 
 
 import time
@@ -148,9 +149,9 @@ def sanitize_description_lines(fn,delimiter_character):
         copyfile(fn, sanitized_fn_name) #adding extension means it won't get 
         # recognized as a FASTA if script is run again
         sys.stderr.write(f"The original input was saved as "
-            "'{sanitized_fn_name}' because characters\nin description line "
-            "needed replacing in order to\nbe properly processed by this "
-            "script & bendIt.")
+        	"'{sanitized_fn_name}' because characters\nin description line "
+        	"needed replacing in order to\nbe properly processed by this "
+        	"script & bendIt.")
         write_string_to_file(collecting_content_string, fn)
 
 def chunk_string(string, chunk_size):
@@ -374,11 +375,11 @@ if len(sequence_files) > 1 and demo_file_name in sequence_files:
 #Report if demo is being used or how many sequence files being processed
 if len(sequence_files) == 1 and sequence_files[0] == demo_file_name:
     for_out2both = "Processing demo file '{}'.".format(demo_file_name)
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 else:
     for_out2both = ("Processing {} files: {}.".format(
         len(sequence_files),repr(sequence_files)))
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 # Go through list of sequence_files and check if these are standard FASTA or if
 # combine sample set label(s) and FASTA record(s). Although the most noticeable 
@@ -750,9 +751,9 @@ for x in sequence_files:
                              ax=ax1)
             plt.legend()
         else:
-            # Note that here I use the columns for the other reported metric 
-            # by referencing the end of the columns list because the first few
-            # columns may be different depending if sequence was included.
+        	# Note that here I use the columns for the other reported metric 
+        	# by referencing the end of the columns list because the first few
+        	# columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
             # so plot on secondary y-axis; use of secondary y-axis with seaborn based on 
             # https://towardsdatascience.com/a-step-by-step-guide-for-creating-advanced-python-data-visualizations-with-seaborn-matplotlib-1579d6a1a7d0
@@ -910,13 +911,13 @@ for x in sequence_files:
     # As part of it, it includes some quality control checks & looks for 
     # duplicate sequences.
     for_out2both = "\n\n#-----------******SUMMARY*******-----------#"
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = "\nSAMPLE SET:"
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = f"\n{sample_set_name}"
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = "\nNUMBER & UNIQUENESS:"
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     processed_seqs=[x for x in sequences_processed_keyed_on_name.values()]
     len_processed_seqs=[len(
         x) for x in sequences_processed_keyed_on_name.values()]
@@ -929,16 +930,16 @@ for x in sequence_files:
         # warn in std.err if noted, even though data numbers of uniques may 
         # be in summary, too
         for_out2both = "\n***WARNING: Duplicate sequences detected.***"
-        out2_stderr_n_log(for_out2both,log_file_text)
+        log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
         for_out2both = ("\n{} cassette sequences processed; {} "
             "unique.".format(len(sequences_processed_keyed_on_name),
             number_unique_sequences_processed))
-        out2_stderr_n_log(for_out2both,log_file_text)
+        log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     else:
         for_out2both = (
             "\n{} unique cassette sequences processed.".format(
             number_unique_sequences_processed))
-        out2_stderr_n_log(for_out2both,log_file_text)
+        log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     processed_merged_seqs=[str(
         x) for x in merged_sequences_processed_keyd_on_name.values()]
     len_processed_merged_seqs=[len(
@@ -947,17 +948,17 @@ for x in sequence_files:
         "number of sequences of the cassette elements should be the same as "
         "the number of merged sequences.")
     for_out2both = "\nLENGTH:"
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = ("\nThe max cassette size:\n{} nts\nMin cassette "
         "size:\n{} nts".format(max(len_processed_seqs),min(len_processed_seqs)))
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = ("\nThe max size merged with defined flanking "
         "sequences:\n{} nts\nMin size merged with defined flanking sequences:\n"
         "{} nts".format(max(len_processed_merged_seqs),
         min(len_processed_merged_seqs)))
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = "\n#--------*****END OF SUMMARY******---------#"
-    out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 
 
@@ -998,14 +999,6 @@ if unsanitized_input_fns:
     files_produced.append(unsanitized_input_fns)
 
 
-log_file_text += (f"\n\n#### THIS CONCLUDES RUN OF bendit analysis "
-    f"{now.strftime('%b%d%Y%H%M')}#######")
-log_file_name = f"LOG_ba{now.strftime('%b%d%Y%H%M')}.txt"
-write_string_to_file(log_file_text, log_file_name )
-sys.stderr.write(f"\nLog file from the run has been saved as "
-    f"`{log_file_name}`.")
-files_produced.append(log_file_name)
-
 
 #Serialize the data in `seqs_dfs_and_plots_per_sample_set`
 # use of `with` based on https://stackoverflow.com/a/20101064/8508004
@@ -1014,6 +1007,10 @@ serial_fn = "seqs_dfs_and_plots_for_each_set.pkl"
 with open(serial_fn, "wb") as f:
     pickle.dump(seqs_dfs_and_plots_per_sample_set, f)
 files_produced.append(serial_fn)
+for_out2both = ("\n\nIn addition to individal tabular data and plot images, "
+    "records of what was procesed and results\nhas been serialized for later "
+    f"use as\n`{serial_fn}`.")
+log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 
 # Save the current notebook and store it as part of the archive next. <==DOESN'T
@@ -1029,8 +1026,19 @@ write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
 !jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
 files_produced.append(plots4review_fn)
 # next line removes the `.py` intermediate made in process to make 'review' nb
-!rm {plots4review_fn[:-6]+".py"} 
+!rm {plots4review_fn[:-6]+".py"}
+for_out2both = ("\n\nA Jupyter notebook listing the resulting plots for "
+    f"convenient reviewing\nhas been saved as `{plots4review_fn}`.")
+log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
+
+log_file_text += (f"\n\n#### THIS CONCLUDES THE RUN OF bendit analysis "
+    f"{now.strftime('%b%d%Y%H%M')}#######")
+log_file_name = f"LOG_ba{now.strftime('%b%d%Y%H%M')}.txt"
+write_string_to_file(log_file_text, log_file_name )
+sys.stderr.write(f"\nLog file from the run has been saved as "
+    f"`{log_file_name}`.")
+files_produced.append(log_file_name)
 
 # Make the archive from the run
 archive_file_name = f"bendit_analysis{now.strftime('%b%d%Y%H%M')}.tar.gz"
