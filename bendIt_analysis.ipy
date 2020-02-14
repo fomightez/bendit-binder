@@ -374,10 +374,10 @@ if len(sequence_files) > 1 and demo_file_name in sequence_files:
     sequence_files.remove(demo_file_name)
 #Report if demo is being used or how many sequence files being processed
 if len(sequence_files) == 1 and sequence_files[0] == demo_file_name:
-    for_out2both = "Processing demo file '{}'.".format(demo_file_name)
+    for_out2both = "Processing demo file '{}'.\n".format(demo_file_name)
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 else:
-    for_out2both = ("Processing {} files: {}.".format(
+    for_out2both = ("Processing {} files: {}.\n".format(
         len(sequence_files),repr(sequence_files)))
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
