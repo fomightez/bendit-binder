@@ -26,3 +26,10 @@ mkdir -p ~/.local/bin
 # to create alias for bendIt ("~/.local/bin" is in the PATH)
 cd ~/.local/bin
 ln -s ~/bendit/bin/bendIt bendIt
+
+
+# Upon addition of Jupytext, I was seeing it want to build when session launched. Seems
+# explained at https://jupytext.readthedocs.io/en/latest/install.html#jupytext-commands-in-jupyterlab
+# >"The Jupytext extension for JupyterLab is bundled with Jupytext. Installing Jupytext will trigger a build of JupyterLab the next time you open it. If you prefer, you can trigger the build manually with `jupyter lab build`"
+# Trying that here to avoid it later showing pop-up about it.
+jupyter lab build
