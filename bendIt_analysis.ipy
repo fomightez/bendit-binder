@@ -1,3 +1,22 @@
+# bendIt_analysis.ipy
+__author__ = "Wayne Decatur" #fomightez on GitHub
+__license__ = "MIT"
+__version__ = "0.2.0"
+
+
+# bendIt_analysis.ipy by Wayne Decatur
+# ver 0.1
+#
+#*******************************************************************************
+# 
+# PURPOSE: Processes via standalone bendIt many 'cassette' sequences placed in 
+# defined flanking sequences.
+# Needs to work in conjunction with the notebook `index.ipynb` that is present
+# at https://github.com/fomightez/bendit-binder . In fact, the easiest way to
+# use this is to launch sessions by clicking on the `launch bend.it` badge at
+# that repo. In the session that comes up, everything will already be installed
+# and presented to the user for processing.
+# 
 import os
 import sys
 import pandas as pd
@@ -25,7 +44,37 @@ def write_string_to_file(s, fn):
     with open(fn, 'w') as output_file:
         output_file.write(s)
 
-def sanitize_description_lines(fn):
+def out2_stderr_n_log(s,log_file_text):
+    '''
+    Takes a string as input and sends it to the stderr as well as to a building
+    string that will everntually get saved as a Log file.
+    Also needs the Log file to be sent in because gets assigned within the
+    function in order to add to it.
+    '''
+    sys.stderr.write(s)
+    log_file_text += s
+
+
+import time
+from IPython.display import display, Javascript
+import hashlib
+def save_notebook(file_path):
+    '''
+    Function to save a notebook from 
+    https://stackoverflow.com/a/57814673/8508004
+
+    IMPORTANTLY, this won't work in the JupyterLab interface for notebooks!
+    See https://github.com/jupyterlab/jupyterlab/issues/7627
+    '''
+    start_md5 = hashlib.md5(open(file_path,'rb').read()).hexdigest()
+    display(Javascript('IPython.notebook.save_checkpoint();'))
+    current_md5 = start_md5
+    while start_md5 == current_md5:
+        time.sleep(1)
+        current_md5 = hashlib.md5(open(file_path,'rb').read()).hexdigest()
+
+
+def sanitize_description_lines(fn,delimiter_character):
     '''
     User wants to be able to have slashes for part of a date stamp in the 
     description lines. This scans FASTA file for description lines and removes
@@ -35,6 +84,10 @@ def sanitize_description_lines(fn):
     use the sample name derived from description line for tracking and not have
     to worry about removing space for ease in use in file names and lose 
     correspondence to actual pyfaidx keys for each sequence.
+
+    Added in also taking in `delimiter_character` and using that to limit what
+    needs sanitizing. Don't care if it is outside of what will become sample 
+    name.
 
     Extra sanitizing added when I found bendIt/bash didn't work with `|` or 
     parantheses in the file names which I was using the description line as.
@@ -56,6 +109,7 @@ def sanitize_description_lines(fn):
     with open(fn, 'r') as input:
         for line in input:
             if line.startswith(">"):
+                line = line.split(delimiter_character)[0]
                 if "/" in line:
                     line = line.replace("/","-")
                     line = line.replace("|","_")
@@ -65,11 +119,19 @@ def sanitize_description_lines(fn):
                     line = line.strip() + "\n" #might as well remove any trailing 
                     # space as well while handling slashes because no harm if 
                     # moot & then don't need to check that line again in any way 
-                    # to rule if possesses trailing space.
+                    # to rule if possesses trailing space. ACtually when added
+                    # in `delimiter_character` to set as boundary to sample name
+                    # the `strip` became MOOT when default space is used.
                     collecting_content_string += line
                 elif line.endswith(" "):
                     line = line.strip() + "\n" #remove trailing space
-                    anything_needing_sanitizing_encountered = True
+                    #anything_needing_sanitizing_encountered = True #Changed 
+                    # from this being noted as 
+                    # `anything_needing_sanitizing_encountered` when added 
+                    # `delimiter_character` use because default is space. And
+                    # if using that default end in space will be ignored anyway,
+                    # and if using someting else should hit before a space at 
+                    # end.
                     line = line.strip() + "\n" #remove trailing space
                     collecting_content_string += line
                 else:
@@ -96,21 +158,21 @@ def chunk_string(string, chunk_size):
     return [string[i:i+chunk_size] for i in range(0, len(string),chunk_size)] 
 
 
-def strip_off_first_line(fn,sample_name,character_to_mark_name_end):
+def strip_off_first_line(fn,set_name,character_to_mark_set_name_end):
     '''
     This takes a name of a file & then uses the shell to remove the first line.
     In order to leave the input file intact, a new multi-sequence FASTA file
     is made and that is used in place of the one where the label was the first
-    line. The sample name extracted gets added to the file name.
+    line. The set sample name extracted gets added to the file name.
     Removing first line based on 
     https://unix.stackexchange.com/questions/96226/delete-first-line-of-a-file
     '''
     name_for_f_without_first_line = (
-        f"{sample_name}{character_to_mark_name_end}set.fa")
+        f"{set_name}{character_to_mark_set_name_end}set.fa")
     !tail -n +2 {fn} >{name_for_f_without_first_line} 
     return name_for_f_without_first_line
 
-def divide_up_any_additional_sets(f,character_to_mark_name_end):
+def divide_up_any_additional_sets(f,character_to_mark_set_name_end):
     '''
     Takes a file that may contain additional sample set labels and fasta entries
     that correspond and makes files for each. It returns the list of files made.
@@ -154,7 +216,7 @@ def divide_up_any_additional_sets(f,character_to_mark_name_end):
                     additional_sequence_files.append(current_file_to_write_to)
                 current_set_name = line.strip()
                 current_file_to_write_to = (
-                    f"{current_set_name}{character_to_mark_name_end}set.fa")
+                    f"{current_set_name}{character_to_mark_set_name_end}set.fa")
                 current_string = ""
                 nxt_line_expct_descript, nxt_line_expct_seq = (True,False)
             elif nxt_line_expct_descript and line.startswith(">"):
@@ -189,6 +251,13 @@ def divide_up_any_additional_sets(f,character_to_mark_name_end):
 
 #######------------------END OF HELPER FUNCTIONS--------------------------######
 ################################################################################
+
+
+# delete `start` to make the starting directory cleaner since will be messy
+# while running & had wanted to delete it as part of `start` but didn't want to
+# bother seeing if possible.
+!rm start
+
 
 
 #For use with converting `report_with_curvature` settings back to what
@@ -230,6 +299,54 @@ log_file_text = ("####BELOW IS LOG of std.out and std.err from bendit "
     "analysis: ######\n\n")
 
 
+review_nb_stub ='''# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.3.3
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+# ---
+
+# # Plots resulting from bendIt Analysis for review
+#
+# For ease of review, use JupyterLab to place 'views' of this notebook side-by-side. As many as seem reasonable to fill your screen width.
+
+import pickle
+# %matplotlib notebook
+serial_fn = "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER"
+with open(serial_fn, "rb") as f:
+    seqs_dfs_and_plots_per_sample_set = pickle.load(f)
+
+
+# %matplotlib inline
+def make_manager(fig):
+    # create a dummy figure and use its
+    # manager to display "fig"  ; based on https://stackoverflow.com/a/54579616/8508004
+    dummy = plt.figure()
+    new_manager = dummy.canvas.manager
+    new_manager.canvas.figure = fig
+    fig.set_canvas(new_manager.canvas)
+import seaborn as sns
+import matplotlib.pyplot as plt
+for ss,collected_dicts in seqs_dfs_and_plots_per_sample_set.items():
+    for sample_name,the_plot in collected_dicts[-1].items():
+        make_manager(the_plot)
+        the_plot.show()
+
+''' 
+
+
+
+
+
+
+
 
 
 ################################################################################
@@ -256,14 +373,13 @@ if len(sequence_files) > 1 and demo_file_name in sequence_files:
     sequence_files.remove(demo_file_name)
 #Report if demo is being used or how many sequence files being processed
 if len(sequence_files) == 1 and sequence_files[0] == demo_file_name:
-    sys.stderr.write("Processing demo file '{}'"
-    ".".format(demo_file_name))
+    for_out2both = "Processing demo file '{}'.".format(demo_file_name)
+    out2_stderr_n_log(for_out2both,log_file_text)
 else:
-    sys.stderr.write("Processing {} files: {}"
-    ".".format(len(sequence_files),repr(sequence_files)))
-files_produced = []
-dataframes_produced = []
-plot_list = []
+    for_out2both = ("Processing {} files: {}.".format(
+        len(sequence_files),repr(sequence_files)))
+    out2_stderr_n_log(for_out2both,log_file_text)
+
 # Go through list of sequence_files and check if these are standard FASTA or if
 # combine sample set label(s) and FASTA record(s). Although the most noticeable 
 # feature of this situation is that there is a label at the first line of the
@@ -289,7 +405,7 @@ for x in sequence_files:
     # Sanitizing will make it possible to use this as part of a file name 
     # more easily in order to easily track sequences and results throughout.
     # Also going to remove line-ending spaces while at it just to be cleaner.
-    sanitize_description_lines(x)
+    sanitize_description_lines(x,character_to_mark_individual_sample_name_end)
     # determine if label for the name of the sample set is on first line or if
     # using file name or defined `sample_set_name`
     if sample_set_name_extract_auto:
@@ -301,7 +417,7 @@ for x in sequence_files:
             label_in_fasta = True
             sample_set_name = first_two_lines_list[0].strip()
             without_first_line_f = strip_off_first_line(
-                x,sample_set_name,character_to_mark_name_end)
+                x,sample_set_name,character_to_mark_set_name_end)
             file_name_substitutions_to_make[x] = without_first_line_f
             # Because if the sequence file has been determined to be 
             # non-standard & have labels in the file, there is the possibility
@@ -309,9 +425,9 @@ for x in sequence_files:
             # first line & additional sections should be split out into 
             # separate, standardized fasta files.
             additional_sequence_files = divide_up_any_additional_sets(
-                without_first_line_f, character_to_mark_name_end)
+                without_first_line_f, character_to_mark_set_name_end)
         else:
-            sample_set_name = x.split(character_to_mark_name_end)[0].strip()
+            sample_set_name = x.split(character_to_mark_set_name_end)[0].strip()
     # 'else' situation will be that `sample_set_name` is used
     else:
         assert len(sequence_files) == 1, "To use "
@@ -339,6 +455,13 @@ if label_in_fasta:
 # that for single input files, the option  of setting 
 # `sample_set_name_extract_auto = False` and assigning the name with 
 # `sample_set_name`.
+#files_produced = []
+files_produced = sequence_files.copy() #start by including sequence files so 
+# they are stored along with that output in a single archive at the end
+seqs_dfs_and_plots_per_sample_set = {} #overarching collection keyed by sample 
+# set; each set of items keyed by sample will go into this as a list
+dataframes_produced_keyed_by_sample = {}
+plots_produced_keyed_by_sample = {}
 for x in sequence_files:
     # determine if label for the name of the sample set is on first line or if
     # using file name or defined `sample_set_name`
@@ -353,7 +476,18 @@ for x in sequence_files:
             sample_set_name = first_two_lines_list[0].strip()
             x = strip_off_first_line(x)
         else:
-            sample_set_name = x.split(character_to_mark_name_end)[0].strip()
+            if character_to_mark_set_name_end in x:
+                sample_set_name = x.split(
+                    character_to_mark_set_name_end)[0].strip()
+            # Build in some fall backs for extracting name of the set, in case 
+            # advice about naming isn't followed.
+            elif " " in x:
+                sample_set_name = x.split(" ")[0]
+            elif "-" in x:
+                sample_set_name = x.split("-")[0].strip()
+            else:
+                sample_set_name = x.split(".")[0].strip()
+
     # 'else' situation will be that `sample_set_name` is used
     else:
         assert sample_set_name, "`sample_set_name` must be set as the name to "
@@ -373,16 +507,18 @@ for x in sequence_files:
     sequence_entries = Fasta(x, read_long_names=True)
     #print(len(sequence_entries))  # FOR DEBUGING ONLY
     for sequence in sequence_entries:
-        sequences_processed_keyed_on_name[sequence.name] = sequence
+        sample_name = sequence.name.split(
+            character_to_mark_individual_sample_name_end)[0]
+        sequences_processed_keyed_on_name[sample_name] = str(sequence)
         merged_sequence = f"{up_bracket}{sequence}{down_bracket}"
-        merged_sequences_processed_keyd_on_name[sequence.name] = merged_sequence
+        merged_sequences_processed_keyd_on_name[sample_name] = merged_sequence
         # make a fasta file (with a single sequence) out of the merged sequence
-        fasta_file_name_for_merged = f"{sequence.name}_merged.fasta"
+        fasta_file_name_for_merged = f"{sample_name}_merged.fasta"
         # if merged sequence is actually less than 1019 (although found in other 
         # testing the exact number varies and sometimes will be around 1040 or 
         # 1030) then add dummy sequence to make it longer than that or 
         # otherwise get 
-        # 'Segmentation fault (core dumped)' becasue it seeme the value at the
+        # 'Segmentation fault (core dumped)' because it seeme the value at the
         # 5th base goes to infinity and crashes the process. Doesn't happen with
         # longer sequences and if clean results back to the length of the window
         # it shouldn't matter. Going to round up a bit from 1019 since it seemed
@@ -410,7 +546,7 @@ for x in sequence_files:
         # sequences later it seemed it didn't matter ACTUALLY. Left chunking to 
         # 70 bp in just because it makes it easier to tell length in developing.
         merged_sequence_made_to_fasta = (
-            f">{sequence.name}\n{merged_sequence_with_linebreaks}")
+            f">{sample_name}\n{merged_sequence_with_linebreaks}")
         # keeping this commented out for now because here `%store is working
         #!echo {merged_sequence_made_to_fasta} > {fasta_file_name_for_merged} 
         # above uses shell b/c magics like `%store` work poor when in a function 
@@ -436,21 +572,26 @@ for x in sequence_files:
         # plots for anything but review in development but seems could be useful
         # for development for them to plot the data of interest.
         end_range = len(merged_sequence) - curvature_window_size
-        output_file_suffix = f"{sequence.name}_output"
+        output_file_suffix = f"{sample_name}_output"
         with io.capture_output() as captured:
             !bendIt -s {fasta_file_name_for_merged} -o {output_file_suffix} -c \
             {curvature_window_size} -b {other_metric_reporting_window_size} \
             -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
             --xmin {curvature_window_size} --xmax {end_range}
 
-        #check for script to send bendit standalone results to dataframe(s) and
-        # retrieve if not already here
-        # Get a file if not yet retrieved / check if file exists
+            # POST PROCESS RESULTS:
+            #------------------------------------------------------------------#
+            # Bring the reported values into Python for convenient plotting & 
+            # analyzing & storing.
+
+            #check for script to send bendit standalone results to dataframe(s)
+            # and retrieve if not already here
+            # Get a file if not yet retrieved / check if file exists
             file_needed = "bendit_standalone_results_to_df.py"
             if not os.path.isfile(file_needed):
                 !curl -OL https://raw.githubusercontent.com/fomightez/sequencework/master/bendit_standalone-utilities/{file_needed}
 
-        # convert to a dataframe
+            # convert to a dataframe
             from bendit_standalone_results_to_df import bendit_standalone_results_to_df
             df = bendit_standalone_results_to_df(
                 output_file_suffix,
@@ -482,14 +623,14 @@ for x in sequence_files:
             sequence_for_otherend_with_linebreaks = "\n".join(
                 chunk_string(sequence_for_otherend_with_linebreaks,70))
             sequence_for_other_end_made_to_fasta = (
-                f">{sequence.name}OTHER_END\n"
+                f">{sample_name}OTHER_END\n"
                 f"{sequence_for_otherend_with_linebreaks}")
-            fasta_file_name_for_other_end = f"{sequence.name}_mergedOE.fasta"
+            fasta_file_name_for_other_end = f"{sample_name}_mergedOE.fasta"
             write_string_to_file(
                 sequence_for_other_end_made_to_fasta, 
                 fasta_file_name_for_other_end)
             start_like_unadded = (cutoff_for_adding - len(merged_sequence))
-            output_file_suffixOE = f"{sequence.name}OE_output"
+            output_file_suffixOE = f"{sample_name}OE_output"
             with io.capture_output() as captured:
                 !bendIt -s {fasta_file_name_for_other_end} -o \
                 {output_file_suffixOE} -c \
@@ -576,7 +717,7 @@ for x in sequence_files:
                             linewidth=1.9,
                             #color="C0",
                             color="xkcd:cerulean", #see 
-                            # https://matplotlib.org/tutorials/colors/colors.html and 
+                            # https://matplotlib.org/tutorials/colors/colors.html & 
                             # https://xkcd.com/color/rgb/
                             ax=ax1)
                 sns.lineplot(x=x_4smooth, 
@@ -585,7 +726,7 @@ for x in sequence_files:
                              linewidth=1.9,
                              #color="C1",
                              color="xkcd:orange", #see 
-                            # https://matplotlib.org/tutorials/colors/colors.html and 
+                            # https://matplotlib.org/tutorials/colors/colors.html &
                             # https://xkcd.com/color/rgb/
                              ax=ax1)
             else:
@@ -595,7 +736,7 @@ for x in sequence_files:
                             linewidth=1.9,
                             #color="C0",
                             color="xkcd:cerulean", #see 
-                            # https://matplotlib.org/tutorials/colors/colors.html and 
+                            # https://matplotlib.org/tutorials/colors/colors.html &
                             # https://xkcd.com/color/rgb/
                             ax=ax1)
                 sns.lineplot(x=df.Position, 
@@ -604,7 +745,7 @@ for x in sequence_files:
                              linewidth=1.9,
                              #color="C1",
                              color="xkcd:orange", #see 
-                            # https://matplotlib.org/tutorials/colors/colors.html and 
+                            # https://matplotlib.org/tutorials/colors/colors.html & 
                             # https://xkcd.com/color/rgb/
                              ax=ax1)
             plt.legend()
@@ -613,7 +754,8 @@ for x in sequence_files:
             # by referencing the end of the columns list because the first few
             # columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
-            # so plot on secondary y-axis
+            # so plot on secondary y-axis; use of secondary y-axis with seaborn based on 
+            # https://towardsdatascience.com/a-step-by-step-guide-for-creating-advanced-python-data-visualizations-with-seaborn-matplotlib-1579d6a1a7d0
             if smooth_plot_curves:
                 # use of Akima1DInterpolator based on UPDATE#2 at 
                 # https://stackoverflow.com/a/37223558/8508004 and seems to match
@@ -630,7 +772,7 @@ for x in sequence_files:
                             linewidth=1.9,
                             #color="C0",
                             color="xkcd:cerulean", #see 
-                            # https://matplotlib.org/tutorials/colors/colors.html and 
+                            # https://matplotlib.org/tutorials/colors/colors.html &
                             # https://xkcd.com/color/rgb/
                             ax=ax1)
                 sns.lineplot(x=x_4smooth, 
@@ -638,7 +780,7 @@ for x in sequence_files:
                              label=df.columns[-1],
                              linewidth=1.9,
                              color="xkcd:orange", #see 
-                            # https://matplotlib.org/tutorials/colors/colors.html and 
+                            # https://matplotlib.org/tutorials/colors/colors.html &
                             # https://xkcd.com/color/rgb/
                              ax=ax2)
             else:
@@ -666,8 +808,11 @@ for x in sequence_files:
             #ax1.legend(loc=0)
             #ax2.legend(loc=1) 
             
-            #legends for both lines made automatically, based on https://stackoverflow.com/a/47370214/8508004
-            fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax.transAxes)
+            #legends for both lines made automatically, based on 
+            # https://stackoverflow.com/a/47370214/8508004
+            fig.legend(
+                loc="upper right", bbox_to_anchor=(1,1), 
+                bbox_transform=ax.transAxes)
             # While the gathered legends works, it seems when using seaborn
             # the legends from each of the two axes show up on the plot over each other 
             # still. Can use the code described at https://stackoverflow.com/a/54782540/8508004
@@ -688,13 +833,13 @@ for x in sequence_files:
         # includes date stamp in user special case example `R5|11/23/19|16(4)`,
         # which gets sanitized to `R5_11-23-19_16+4+`
         if show_date_with_slashes_in_plot_title and (
-            sequence.name.count("_") == 2) and (
-            sequence.name.split("_")[1].split("_")[0].count("-") == 2) and (
-            sequence.name.split("_",2)[2].count("+") == 2) and (
-            sequence.name.endswith("+")):
-            title_text = sequence.name.split(
-                "_")[0]+"|" + sequence.name.split("_")[1].replace(
-                "-","/") +"|" + sequence.name.split("_",2)[2]
+            sample_name.count("_") == 2) and (
+            sample_name.split("_")[1].split("_")[0].count("-") == 2) and (
+            sample_name.split("_",2)[2].count("+") == 2) and (
+            sample_name.endswith("+")):
+            title_text = sample_name.split(
+                "_")[0]+"|" + sample_name.split("_")[1].replace(
+                "-","/") +"|" + sample_name.split("_",2)[2]
             #restore parantheses near end too. Can use fact `+` at end to
             # to specify closing parantheses. So position of the `+` used to 
             # enable using `+` as a symbol for two different characters.
@@ -702,31 +847,19 @@ for x in sequence_files:
                 title_text = title_text[:-1] + ")"
                 title_text = title_text.replace("+","(")
         else:
-            title_text = sequence.name
+            title_text = sample_name
 
 
-        #plt.title(f"{sequence.name}",color="#333333",fontsize = 16)
-        #plt.title(f"{sequence.name}",color="#333333",fontsize = 'large', fontweight='bold')
-        plt.title(f"{title_text}",color="#333333",fontsize = 15, fontweight='bold')
+        #plt.title(f"{sample_name}",color="#333333",fontsize = 16)
+        #plt.title(f"{sample_name}",color="#333333",fontsize = 'large', fontweight='bold')
+        plt.title(f"{title_text}",color="#333333",fontsize = 15, 
+            fontweight='bold')
 
         plt.show()
-        sns.set()
-        
+        sns.set() #resets to default, in case want to plot other things below; 
+        # inherited from code for twin y-axes (secondary y-axis) with seaborn 
 
 
-        # POST PROCESS RESULTS:
-        #----------------------------------------------------------------------#
-        # Bring the reported values into Python for convenient plotting & 
-        # analyzing & storing.
-        pass
-        # Adjust to account for extra sequence added to make at least length 
-        # that shouldn't give 'Segmentation fault (core dumped)' issue.
-        if len(merged_sequence_with_linebreaks) < cutoff_for_adding:
-            
-            pass
-
-        if include_gnuplots:
-            pass
     
 
 
@@ -737,56 +870,183 @@ for x in sequence_files:
         # 2. deleting the output files made, should be a png and text file
         !rm {fasta_file_name_for_merged}
         !rm {output_file_suffix}
-        !rm {output_file_suffix}.png
+        if not include_gnuplots:
+            !rm {output_file_suffix}.png
         if sequence_lengthened_to_not_cause_fault:
             !rm {fasta_file_name_for_other_end}
             !rm {output_file_suffixOE}
             !rm {output_file_suffixOE}.png
-        !rm *.fai
+
+        
+
+        # SET-UP RESULTS FOR STORAGE LATER:
+        #----------------------------------------------------------------------#
+        #store df
+        #store plot
+        prefix_4_df_pkl_n_plot_file_saves = f"{sample_set_name}_{sample_name}"
+        df_pkl_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.pkl"
+        df.to_pickle(df_pkl_nom)
+        files_produced.append(df_pkl_nom)
+        df_tsv_nom = f'{prefix_4_df_pkl_n_plot_file_saves}.tsv'
+        df.to_csv(df_tsv_nom, sep='\t',index = False)
+        files_produced.append(df_tsv_nom)
+        plot_png_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.png"
+        fig.savefig(plot_png_nom)
+        files_produced.append(plot_png_nom)
+        plot_svg_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.svg"
+        fig.savefig(plot_svg_nom) #vector graphics best for scaling up directly
+        files_produced.append(plot_svg_nom)
+        dataframes_produced_keyed_by_sample[sample_name] = df
+        plots_produced_keyed_by_sample[sample_name] = fig
+
+        if include_gnuplots:
+            files_produced.append(f"{output_file_suffix}.png")
 
 
-    # REPARE SUMMARY:
+
+    # PREPARE SAMPLE SET SUMMARY:
     #--------------------------------------------------------------------------#
+    # Show this in the stderr output at end of run and also send to Log file.
+    # As part of it, it includes some quality control checks & looks for 
+    # duplicate sequences.
+    for_out2both = "\n\n#-----------******SUMMARY*******-----------#"
+    out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = "\nSAMPLE SET:"
+    out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = f"\n{sample_set_name}"
+    out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = "\nNUMBER & UNIQUENESS:"
+    out2_stderr_n_log(for_out2both,log_file_text)
+    processed_seqs=[x for x in sequences_processed_keyed_on_name.values()]
+    len_processed_seqs=[len(
+        x) for x in sequences_processed_keyed_on_name.values()]
     # Some quality control checks.
     # in anticpation of producing a summary, check for duplicates
-    if len(sequences_processed_keyed_on_name) != len(
-        set(sequences_processed_keyed_on_name.values())):
+    number_unique_sequences_processed = len(set(processed_seqs))
+    if len(sequences_processed_keyed_on_name) != len(set(processed_seqs)):
         sequences_with_duplicates = True
         merged_sequences_with_duplicates = True
         # warn in std.err if noted, even though data numbers of uniques may 
         # be in summary, too
-        sys.stderr.write("\n**WARNING: Duplicate sequences detected.***")
-    assert len(set(sequences_processed_keyed_on_name.values())) == len(
-        set(merged_sequences_processed_keyd_on_name.values())), "The number of "
-    "sequences of the cassette elements should be the same as the number of "
-    "merged sequences."
+        for_out2both = "\n***WARNING: Duplicate sequences detected.***"
+        out2_stderr_n_log(for_out2both,log_file_text)
+        for_out2both = ("\n{} cassette sequences processed; {} "
+            "unique.".format(len(sequences_processed_keyed_on_name),
+            number_unique_sequences_processed))
+        out2_stderr_n_log(for_out2both,log_file_text)
+    else:
+        for_out2both = (
+            "\n{} unique cassette sequences processed.".format(
+            number_unique_sequences_processed))
+        out2_stderr_n_log(for_out2both,log_file_text)
+    processed_merged_seqs=[str(
+        x) for x in merged_sequences_processed_keyd_on_name.values()]
+    len_processed_merged_seqs=[len(
+        str(x)) for x in merged_sequences_processed_keyd_on_name.values()]
+    assert len(set(processed_seqs)) == len(set(processed_merged_seqs)), ("The "
+        "number of sequences of the cassette elements should be the same as "
+        "the number of merged sequences.")
+    for_out2both = "\nLENGTH:"
+    out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = ("\nThe max cassette size:\n{} nts\nMin cassette "
+        "size:\n{} nts".format(max(len_processed_seqs),min(len_processed_seqs)))
+    out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = ("\nThe max size merged with defined flanking "
+        "sequences:\n{} nts\nMin size merged with defined flanking sequences:\n"
+        "{} nts".format(max(len_processed_merged_seqs),
+        min(len_processed_merged_seqs)))
+    out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = "\n#--------*****END OF SUMMARY******---------#"
+    out2_stderr_n_log(for_out2both,log_file_text)
 
-    # PACKAGE UP RESULTS AND SUMMARY (include [processed? in case of non-standard] input used?):
+
+
+    # PREPARE DATA COLLECTION FROM THE SAMPLE SET FOR INCLUSION IN ARCHIVE:
     #--------------------------------------------------------------------------#
 
-    if include_gnuplots:
-            pass
+    seqs_dfs_and_plots_per_sample_set[sample_set_name] = [
+        sequences_processed_keyed_on_name, 
+        merged_sequences_processed_keyd_on_name, 
+        dataframes_produced_keyed_by_sample,
+        plots_produced_keyed_by_sample
+        ]
 
-# PACKAGE UP LOG AND RESULTS FOR ALL:
-#--------------------------------------------------------------------------#
+    #plus delete the `.fai` files made when processing current sequence file
+    !rm *.fai
+
+
+
+
+
+spinner.stop()
+
+# PACKAGE UP LOG AND ARCHUVE RESULTS FOR ALL:
+#------------------------------------------------------------------------------#
 
 now = datetime.datetime.now()
 
-# collect all the unsantized input files if there are any
+#store `sequences_processed_keyed_on_name` somehow
+#store `merged_sequences_processed_keyd_on_name` somehow
+
+# collect all the unsanitized input files if there are any
 files_pattern_at_start_of_name = "unsanitized_input_"
 unsanitized_input_fns= []
 for file in os.listdir('.'):
     if fnmatch.fnmatch(file, files_pattern_at_start_of_name+'*'):
         unsanitized_input_fns.append(file)
+if unsanitized_input_fns:
+    files_produced.append(unsanitized_input_fns)
 
-if include_gnuplots:
-        pass
 
-write_string_to_file(log_file_text, 
-    f"LOG_ba{now.strftime('%b%d%Y%H%M')}.txt")
+log_file_text += (f"\n\n#### THIS CONCLUDES RUN OF bendit analysis "
+    f"{now.strftime('%b%d%Y%H%M')}#######")
+log_file_name = f"LOG_ba{now.strftime('%b%d%Y%H%M')}.txt"
+write_string_to_file(log_file_text, log_file_name )
+sys.stderr.write(f"\nLog file from the run has been saved as "
+    f"`{log_file_name}`.")
+files_produced.append(log_file_name)
+
+
+#Serialize the data in `seqs_dfs_and_plots_per_sample_set`
+# use of `with` based on https://stackoverflow.com/a/20101064/8508004
+import pickle 
+serial_fn = "seqs_dfs_and_plots_for_each_set.pkl"
+with open(serial_fn, "wb") as f:
+    pickle.dump(seqs_dfs_and_plots_per_sample_set, f)
+files_produced.append(serial_fn)
+
+
+# Save the current notebook and store it as part of the archive next. <==DOESN'T
+# WORK IN JUPYTERLAB, see https://github.com/jupyterlab/jupyterlab/issues/7627
+#save_notebook("index.ipynb")
+#files_produced.append("index.ipynb")
+# Since cannot save the notebook, in JupyterLab, send the plots to a notebook
+# using Jupytext and then execute & save that notebook with the archive?
+plots4review_fn = f"plots4review_from-ba{now.strftime('%b%d%Y%H%M')}.ipynb"
+review_nb_stub = review_nb_stub.replace(
+    "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER",serial_fn)
+write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
+!jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
+files_produced.append(plots4review_fn)
+# next line removes the `.py` intermediate made in process to make 'review' nb
+!rm {plots4review_fn[:-6]+".py"} 
+
+
+# Make the archive from the run
+archive_file_name = f"bendit_analysis{now.strftime('%b%d%Y%H%M')}.tar.gz"
+#print(files_produced) # FOR DEBUGGING ONLY
+!tar czf {archive_file_name} {" ".join(files_produced)}
+sys.stderr.write("*****************DONE***********************************\n"
+    "{} generated. Download it.\n"
+    "*****************DONE***********************************".format(
+    archive_file_name))
     
-
-spinner.stop()
+# Delete the files that have been archived
+for ef in files_produced:
+    !rm {ef}
+# Delete the `temp` files from the making of the dataframes step; they were used 
+# for the checking of the two sets of data bendIt reports.
+!rm results_parsing_temp*.tsv
 
 #######------------------END OF MAIN SECTION------------------------------######
 ################################################################################
