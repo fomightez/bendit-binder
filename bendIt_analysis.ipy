@@ -25,6 +25,8 @@ from halo import Halo
 from IPython.utils import io
 import fnmatch
 import datetime
+from statistics import mean, median, mode, StatisticsError
+import collections
 
 demo_file_name = "demo_sample_set.fa"
 
@@ -95,6 +97,11 @@ def sanitize_description_lines(fn,delimiter_character):
     Will use position of closing paranthesis at end to get away using same 
     indicator character for both since running out of unusual characters to use.
     Use of `+` from https://superuser.com/questions/358855/what-characters-are-safe-in-cross-platform-file-names-for-linux-windows-and-os
+    (I wonder if these listed at 
+    https://twitter.com/PhilippBayer/status/1229741303727935493, "ASCII has a 
+    set of characters especially for this purpose. Nobody uses it.  ASCII 1C to 
+    1F" would be useable?!?! It would add more options that I had come up with 
+    for replacements that I could the substitute back out later.)
     Example shown above gets sanitized to `R5_11-23-19_16+4+`
 
     Takes:
@@ -148,10 +155,10 @@ def sanitize_description_lines(fn,delimiter_character):
         from shutil import copyfile
         copyfile(fn, sanitized_fn_name) #adding extension means it won't get 
         # recognized as a FASTA if script is run again
-        sys.stderr.write(f"The original input was saved as "
-            "'{sanitized_fn_name}' because characters\nin description line "
-            "needed replacing in order to\nbe properly processed by this "
-            "script & bendIt.")
+        sys.stderr.write("The original input was saved as '{}' because "
+            "characters\nin description line needed replacing in order to\nbe "
+            "properly processed by this script & bendIt.".format(
+            sanitized_fn_name))
         write_string_to_file(collecting_content_string, fn)
 
 def chunk_string(string, chunk_size):
@@ -250,6 +257,16 @@ def divide_up_any_additional_sets(f,character_to_mark_set_name_end):
     !rm {temp_file_name}
     return additional_sequence_files
 
+def percent_GCcalc(items):
+    '''
+    takes a list of three and calculates percentage of sum of first
+    two itemswithin total (second item)
+
+    Taken from 
+    `GSD Adding_percentGC_to_nt_counts_for_mito_genomes_from_1011_collection.ipynb`
+    '''
+    return (items[0] + items[1])/items[2]
+
 #######------------------END OF HELPER FUNCTIONS--------------------------######
 ################################################################################
 
@@ -257,7 +274,9 @@ def divide_up_any_additional_sets(f,character_to_mark_set_name_end):
 # delete `start` to make the starting directory cleaner since will be messy
 # while running & had wanted to delete it as part of `start` but didn't want to
 # bother seeing if possible.
-!rm start
+for file in os.listdir('.'):
+    if file == "start":
+        !rm start
 
 
 
@@ -904,19 +923,24 @@ for x in sequence_files:
             files_produced.append(f"{output_file_suffix}.png")
 
 
+    spinner.stop()
+
 
     # PREPARE SAMPLE SET SUMMARY:
     #--------------------------------------------------------------------------#
     # Show this in the stderr output at end of run and also send to Log file.
     # As part of it, it includes some quality control checks & looks for 
-    # duplicate sequences.
+    # duplicate sequences. Because mode calculation can produce errors if there 
+    # is not actual value that is most frequent some special handling of that 
+    # has been built in based on https://stackoverflow.com/a/25109040/8508004. 
     for_out2both = "\n\n#-----------******SUMMARY*******-----------#"
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = "\nSAMPLE SET:"
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = f"\n{sample_set_name}"
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
-    for_out2both = "\nNUMBER & UNIQUENESS:"
+    #----SUMMARIZE NUMBER & UNIQUENESS-----------------------------------------#
+    for_out2both = "\n#-----*NUMBER & UNIQUENESS*-----#:"
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     processed_seqs=[x for x in sequences_processed_keyed_on_name.values()]
     len_processed_seqs=[len(
@@ -947,18 +971,167 @@ for x in sequence_files:
     assert len(set(processed_seqs)) == len(set(processed_merged_seqs)), ("The "
         "number of sequences of the cassette elements should be the same as "
         "the number of merged sequences.")
-    for_out2both = "\nLENGTH:"
+    #----SUMMARIZE LENGTH------------------------------------------------------#
+    for_out2both = "\n#-----------*LENGTH*------------#:"
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
     for_out2both = ("\nThe max cassette size:\n{} nts\nMin cassette "
         "size:\n{} nts".format(max(len_processed_seqs),min(len_processed_seqs)))
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
-    for_out2both = ("\nThe max size merged with defined flanking "
-        "sequences:\n{} nts\nMin size merged with defined flanking sequences:\n"
-        "{} nts".format(max(len_processed_merged_seqs),
+    for_out2both = ("\nThe mean cassette size:\n{:.0f} nts\nMedian cassette "
+        "size:\n{:.0f} nts".format(
+        mean(len_processed_seqs),median(len_processed_seqs)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    try:
+        lenmode= mode(len_processed_seqs)
+        for_out2both=("\nThe mode cassette size:\n{:.0f} nts".format(lenmode))
+    except StatisticsError:
+        for_out2both=("\nThere is no mode for cassette size.")
+        if len(set(len_processed_seqs)) == len(len_processed_seqs):
+            for_out2both=(" All values are unique.")
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    
+    for_out2both = ("\nThe max size for merged with defined flanking "
+        "sequences:\n{} nts\nMin size for merged with defined flanking "
+        "sequences:\n{} nts".format(max(len_processed_merged_seqs),
         min(len_processed_merged_seqs)))
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = ("\nThe mean size for merged with defined flanking "
+        "sequences:\n{:.0f} nts\nMedian size for merged with defined flanking "
+        "sequences:\n{:.0f} nts".format(
+        mean(len_processed_merged_seqs), median(len_processed_merged_seqs)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    try:
+        lenmmode= mode(len_processed_merged_seqs)
+        for_out2both=("\nThe mode size or merged with defined flanking "
+            "sequences:\n{:.0f} nts".format(lenmmode))
+    except StatisticsError:
+        for_out2both=("\nThere is no mode for size of merged.")
+        if len(set(len_processed_merged_seqs)) == len(
+            len_processed_merged_seqs):
+            for_out2both=(" All values are unique.")
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+
+    #----SUMMARIZE %G+C:-------------------------------------------------------#
+    cassette_nt_counts = {}
+    to_add_seq_to_df = []
+    for sn,seq_str in sequences_processed_keyed_on_name.items():
+        cassette_nt_counts[sn] = collections.Counter(seq_str.upper())
+        assert len(cassette_nt_counts[sn]) <= 4, ("There should only be "
+            f"G,A,T,or C in count of cassette nts of {sn}.")
+        to_add_seq_to_df.append(seq_str.upper()) 
+    cassette_nt_count_df = pd.DataFrame.from_dict(
+        cassette_nt_counts, orient='index').fillna(0)
+    # It seems for columns that include a zero fill on nt count, the dtype gets 
+    # converted to a float, this will lock back into integer
+    cassette_nt_count_df.G = cassette_nt_count_df.G.astype(dtype='int64')
+    cassette_nt_count_df.A = cassette_nt_count_df.A.astype(dtype='int64')
+    cassette_nt_count_df.C = cassette_nt_count_df.C.astype(dtype='int64')
+    cassette_nt_count_df["T"] = cassette_nt_count_df["T"].astype(dtype='int64')#
+    # for nucleotide `T` need to use bracket notation and not attribute notation
+    # a.k.a. dot notation because `DataFrame.T` is something in Pandas for 
+    # transposing, see https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.T.html
+    
+    # include the sequence for cassettes as they are probably short and move to
+    # after the name
+    cassette_nt_count_df["seq"] = to_add_seq_to_df 
+    # move `seq` column to first in dataframe based on 
+    # https://stackoverflow.com/a/51009742/8508004
+    cols = cassette_nt_count_df.columns.tolist()
+    n = int(cols.index('seq'))
+    cols = [cols[n]] + cols[:n] + cols[n+1:]
+    cassette_nt_count_df = cassette_nt_count_df[cols]
+    cassette_nt_count_df["Total_nts"] = cassette_nt_count_df.sum(1)
+    cassette_nt_count_df['%G+C'] = (
+        cassette_nt_count_df[['C','G','Total_nts']].apply(
+        percent_GCcalc, axis=1))
+    cassette_nt_count_df["rank_on_GC"]= cassette_nt_count_df['%G+C'].rank()#from 
+    # `GSD Asessing_ambiguous_nts_and_calculating_percentGC_for_332_saccharomytina_genomes.ipynb`
+    cassetteGClist = cassette_nt_count_df['%G+C'].tolist()
+    merged_nt_counts = {}
+    for sn,seq_str in merged_sequences_processed_keyd_on_name.items():
+        merged_nt_counts[sn] = collections.Counter(seq_str.upper())
+        assert len(merged_nt_counts[sn]) <= 4, ("There should only be "
+            f"G,A,T,or C in count of nts of merged {sn}.")
+    merged_nt_count_df = pd.DataFrame.from_dict(
+        merged_nt_counts, orient='index').fillna(0)
+    # It seems for columns that include a zero fill on nt count, the dtype gets 
+    # converted to a float, this will lock back into integer. Less likely to
+    # happen for merged form but might as well avoid the chance.
+    merged_nt_count_df.G = merged_nt_count_df.G.astype(dtype='int64')
+    merged_nt_count_df.A = merged_nt_count_df.A.astype(dtype='int64')
+    merged_nt_count_df.C = merged_nt_count_df.C.astype(dtype='int64')
+    merged_nt_count_df["T"] = merged_nt_count_df["T"].astype(dtype='int64')#
+    # for nucleotide `T` need to use bracket notation and not attribute notation
+    # a.k.a. dot notation because `DataFrame.T` is something in Pandas for 
+    # transposing, see https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.T.html
+    merged_nt_count_df["Total_nts"] = merged_nt_count_df.sum(1)
+    merged_nt_count_df['%G+C'] = (
+        merged_nt_count_df[['C','G','Total_nts']].apply(
+        percent_GCcalc, axis=1))
+    merged_nt_count_df["rank_on_GC"]= merged_nt_count_df['%G+C'].rank()#from 
+    # `GSD Asessing_ambiguous_nts_and_calculating_percentGC_for_332_saccharomytina_genomes.ipynb`
+    # store the GC dataframes as files
+    prefix_4_GCdf_file_saves = f"{sample_set_name}_cassettesGC"
+    GCdf_pkl_nom = f"{prefix_4_GCdf_file_saves}.pkl"
+    cassette_nt_count_df.to_pickle(GCdf_pkl_nom)
+    files_produced.append(GCdf_pkl_nom)
+    GCdf_tsv_nom = f'{prefix_4_GCdf_file_saves }.tsv'
+    cassette_nt_count_df.to_csv(GCdf_tsv_nom, sep='\t',index = False)
+    files_produced.append(GCdf_tsv_nom)
+    prefix_4_mGCdf_file_saves = f"{sample_set_name}_mergedGC"
+    mGCdf_pkl_nom = f"{prefix_4_mGCdf_file_saves}.pkl"
+    merged_nt_count_df.to_pickle(mGCdf_pkl_nom)
+    files_produced.append(mGCdf_pkl_nom)
+    mGCdf_tsv_nom = f'{prefix_4_mGCdf_file_saves }.tsv'
+    merged_nt_count_df.to_csv(mGCdf_tsv_nom, sep='\t',index = False)
+    files_produced.append(mGCdf_tsv_nom)
+    for_out2both = "\n#------------*%G+C*-------------#:"
+    mergedGClist = merged_nt_count_df['%G+C'].tolist()
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = ("\nThe max cassette %G+C:\n{:.2%}\nMin cassette "
+        "%G+C:\n{:.2%} ".format(max(cassetteGClist),min(cassetteGClist)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = ("\nThe mean cassette %G+C:\n{:.2%}\nMedian cassette "
+        "%G+C:\n{:.2%}".format(mean(cassetteGClist),median(cassetteGClist)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    # round cassetteGClist entries for better chance at getting a mode? Note b/c
+    # G+C is a percent need to shift rounding over two more decimal places
+    rnd_cassetteGClist = [round(x, 3) for x in cassetteGClist]
+    try:
+        gcmode= mode(rnd_cassetteGClist)
+        for_out2both=("\nThe mode rounded %G+C for cassettes"
+            ":\n{:.1%}".format(gcmode))
+    except StatisticsError:
+        for_out2both=("\nThere is no mode for rounded %G+C of cassettes.")
+        if len(set(rnd_cassetteGClist)) == len(rnd_cassetteGClist):
+            for_out2both+=(" All values are unique.")
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+
+    for_out2both = ("\nThe max %G+C for merged with defined flanking "
+        "sequences:\n{:.2%}\nMin %G+C for merged with defined flanking "
+        "sequences:\n{:.2%}".format(max(mergedGClist),min(mergedGClist)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    for_out2both = ("\nThe mean %G+C for merged with defined flanking "
+        "sequences:\n{:.2%} nts\nMedian %G+C for merged with defined flanking "
+        "sequences:\n{:.2%} nts".format(
+        mean(mergedGClist), median(mergedGClist)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    # round mergedGClist entries for better chance at getting a mode? Note b/c
+    # G+C is a percent need to shift rounding over two more decimal places
+    rnd_mergedGClist = [round(x, 3) for x in mergedGClist]
+    try:
+        mgcmode= mode(rnd_mergedGClist)
+        for_out2both=("\nThe mode rounded %G+C for merged with defined "
+            "flanking sequences:\n{:.1%}".format(mgcmode))
+    except StatisticsError:
+        for_out2both=("\nThere is no mode for rounded %G+C of merged.")
+        if len(set(rnd_mergedGClist)) == len(rnd_mergedGClist):
+            for_out2both+=(" All values are unique.")
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+
     for_out2both = "\n#--------*****END OF SUMMARY******---------#"
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    
 
 
 
@@ -967,7 +1140,9 @@ for x in sequence_files:
 
     seqs_dfs_and_plots_per_sample_set[sample_set_name] = [
         sequences_processed_keyed_on_name, 
-        merged_sequences_processed_keyd_on_name, 
+        merged_sequences_processed_keyd_on_name,
+        cassette_nt_count_df,
+        merged_nt_count_df, 
         dataframes_produced_keyed_by_sample,
         plots_produced_keyed_by_sample
         ]
@@ -978,8 +1153,6 @@ for x in sequence_files:
 
 
 
-
-spinner.stop()
 
 # PACKAGE UP LOG AND ARCHUVE RESULTS FOR ALL:
 #------------------------------------------------------------------------------#
@@ -996,7 +1169,7 @@ for file in os.listdir('.'):
     if fnmatch.fnmatch(file, files_pattern_at_start_of_name+'*'):
         unsanitized_input_fns.append(file)
 if unsanitized_input_fns:
-    files_produced.append(unsanitized_input_fns)
+    files_produced.extend(unsanitized_input_fns)
 
 
 
@@ -1008,8 +1181,8 @@ with open(serial_fn, "wb") as f:
     pickle.dump(seqs_dfs_and_plots_per_sample_set, f)
 files_produced.append(serial_fn)
 for_out2both = ("\n\nIn addition to individal tabular data and plot images, "
-    "records of what was procesed and results\nhas been serialized for later "
-    f"use as\n`{serial_fn}`.")
+    "records of\nwhat was procesed and results have\nbeen serialized for later "
+    f"use as `{serial_fn}`.")
 log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 
@@ -1027,7 +1200,7 @@ write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
 files_produced.append(plots4review_fn)
 # next line removes the `.py` intermediate made in process to make 'review' nb
 !rm {plots4review_fn[:-6]+".py"}
-for_out2both = ("\n\nA Jupyter notebook listing the resulting plots for "
+for_out2both = ("\nA Jupyter notebook listing the resulting plots for "
     f"convenient reviewing\nhas been saved as `{plots4review_fn}`.")
 log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
@@ -1036,7 +1209,7 @@ log_file_text += (f"\n\n#### THIS CONCLUDES THE RUN OF bendit analysis "
     f"{now.strftime('%b%d%Y%H%M')}#######")
 log_file_name = f"LOG_ba{now.strftime('%b%d%Y%H%M')}.txt"
 write_string_to_file(log_file_text, log_file_name )
-sys.stderr.write(f"\nLog file from the run has been saved as "
+sys.stderr.write(f"\n\nLog file from the run has been saved as "
     f"`{log_file_name}`.")
 files_produced.append(log_file_name)
 
@@ -1044,7 +1217,7 @@ files_produced.append(log_file_name)
 archive_file_name = f"bendit_analysis{now.strftime('%b%d%Y%H%M')}.tar.gz"
 #print(files_produced) # FOR DEBUGGING ONLY
 !tar czf {archive_file_name} {" ".join(files_produced)}
-sys.stderr.write("*****************DONE***********************************\n"
+sys.stderr.write("\n*****************DONE***********************************\n"
     "{} generated. Download it.\n"
     "*****************DONE***********************************".format(
     archive_file_name))
