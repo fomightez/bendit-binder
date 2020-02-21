@@ -1076,14 +1076,14 @@ for x in sequence_files:
     cassette_nt_count_df.to_pickle(GCdf_pkl_nom)
     files_produced.append(GCdf_pkl_nom)
     GCdf_tsv_nom = f'{prefix_4_GCdf_file_saves }.tsv'
-    cassette_nt_count_df.to_csv(GCdf_tsv_nom, sep='\t',index = False)
+    cassette_nt_count_df.to_csv(GCdf_tsv_nom, sep='\t')
     files_produced.append(GCdf_tsv_nom)
     prefix_4_mGCdf_file_saves = f"{sample_set_name}_mergedGC"
     mGCdf_pkl_nom = f"{prefix_4_mGCdf_file_saves}.pkl"
     merged_nt_count_df.to_pickle(mGCdf_pkl_nom)
     files_produced.append(mGCdf_pkl_nom)
     mGCdf_tsv_nom = f'{prefix_4_mGCdf_file_saves }.tsv'
-    merged_nt_count_df.to_csv(mGCdf_tsv_nom, sep='\t',index = False)
+    merged_nt_count_df.to_csv(mGCdf_tsv_nom, sep='\t')
     files_produced.append(mGCdf_tsv_nom)
     for_out2both = "\n#------------*%G+C*-------------#:"
     mergedGClist = merged_nt_count_df['%G+C'].tolist()
