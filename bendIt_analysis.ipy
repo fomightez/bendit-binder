@@ -704,13 +704,13 @@ for x in sequence_files:
                 [df[:point_to_merge_at],df_oth[point_to_merge_at:]], axis=0)
 
 
-            
+
 
         # Plot the reported data
         #----------------------------------------------------------------------#
         import seaborn as sns
         import matplotlib.pyplot as plt
-        sns.set(style="whitegrid")
+        sns.set_style("whitegrid")
         fig, ax1 = plt.subplots(figsize=(8,4))
 
         if report_with_curvature == "bendability":
