@@ -1228,7 +1228,7 @@ sys.stderr.write("\n*****************DONE***********************************\n"
 # Delete the files that have been archived (except leave the demo sequence file 
 # so that development example can be run again easily)
 sys.stderr.write("\nCleaning up...be patient...\n")
-spinner = Halo(text='Cleaning', spinner='dots')
+spinner = Halo(spinner='toggle5')
 spinner.start()  
 if demo_file_name in files_produced:
     files_produced.remove(demo_file_name)
