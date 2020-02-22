@@ -770,9 +770,9 @@ for x in sequence_files:
                              ax=ax1)
             plt.legend()
         else:
-            # Note that here I use the columns for the other reported metric 
-            # by referencing the end of the columns list because the first few
-            # columns may be different depending if sequence was included.
+        	# Note that here I use the columns for the other reported metric 
+        	# by referencing the end of the columns list because the first few
+        	# columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
             # so plot on secondary y-axis; use of secondary y-axis with seaborn based on 
             # https://towardsdatascience.com/a-step-by-step-guide-for-creating-advanced-python-data-visualizations-with-seaborn-matplotlib-1579d6a1a7d0
@@ -1154,7 +1154,7 @@ for x in sequence_files:
 
 
 
-# PACKAGE UP LOG AND ARCHUVE RESULTS FOR ALL:
+# PACKAGE UP LOG AND ARCHIVE RESULTS FOR ALL:
 #------------------------------------------------------------------------------#
 
 now = datetime.datetime.now()
@@ -1221,9 +1221,15 @@ sys.stderr.write("\n*****************DONE***********************************\n"
     "{} generated. Download it.\n"
     "*****************DONE***********************************".format(
     archive_file_name))
-    
+
+
+# CLEAN UP SO DIRECTORY NOT SO CLUTTERED SO MORE OBVIOUS WHAT TO DOWNLOAD:
+#------------------------------------------------------------------------------#  
 # Delete the files that have been archived (except leave the demo sequence file 
 # so that development example can be run again easily)
+sys.stderr.write("\nCleaning up...be patient...\n")
+spinner = Halo(text='Cleaning', spinner='dots')
+spinner.start()  
 if demo_file_name in files_produced:
     files_produced.remove(demo_file_name)
 for ef in files_produced:
@@ -1232,5 +1238,7 @@ for ef in files_produced:
 # for the checking of the two sets of data bendIt reports.
 !rm results_parsing_temp*.tsv
 
+spinner.stop()
+sys.stderr.write("\nCleaning complete.")
 #######------------------END OF MAIN SECTION------------------------------######
 ################################################################################
