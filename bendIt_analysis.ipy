@@ -5,7 +5,7 @@ __version__ = "0.2.0"
 
 
 # bendIt_analysis.ipy by Wayne Decatur
-# ver 0.1
+# ver 0.2.0
 #
 #*******************************************************************************
 # 
@@ -398,6 +398,13 @@ if len(sequence_files) == 1 and sequence_files[0] == demo_file_name:
 else:
     for_out2both = ("Processing {} files: {}.\n".format(
         len(sequence_files),repr(sequence_files)))
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+
+if lightweight_archive:
+    for_out2both = ("\n'lightweight_archive' setting used. The resulting "
+        " archive will not\n include any 'raw' gnuplots, notebook for review "
+        "of plots, or image files.\n The latter two can be made later from the "
+        "archive, if needed".format(demo_file_name))
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 # Go through list of sequence_files and check if these are standard FASTA or if
@@ -894,7 +901,7 @@ for x in sequence_files:
         # 2. deleting the output files made, should be a png and text file
         !rm {fasta_file_name_for_merged}
         !rm {output_file_suffix}
-        if not include_gnuplots:
+        if (not lightweight_archive) and (not include_gnuplots):
             !rm {output_file_suffix}.png
         if sequence_lengthened_to_not_cause_fault:
             !rm {fasta_file_name_for_other_end}
@@ -914,16 +921,17 @@ for x in sequence_files:
         df_tsv_nom = f'{prefix_4_df_pkl_n_plot_file_saves}.tsv'
         df.to_csv(df_tsv_nom, sep='\t',index = False)
         files_produced.append(df_tsv_nom)
-        plot_png_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.png"
-        fig.savefig(plot_png_nom)
-        files_produced.append(plot_png_nom)
-        plot_svg_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.svg"
-        fig.savefig(plot_svg_nom) #vector graphics best for scaling up directly
-        files_produced.append(plot_svg_nom)
+        if not lightweight_archive:
+            plot_png_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.png"
+            fig.savefig(plot_png_nom)
+            files_produced.append(plot_png_nom)
+            plot_svg_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.svg"
+            fig.savefig(plot_svg_nom) #vector graphics best for directly scaling
+            files_produced.append(plot_svg_nom)
         dataframes_produced_keyed_by_sample[sample_name] = df
         plots_produced_keyed_by_sample[sample_name] = fig
 
-        if include_gnuplots:
+        if include_gnuplots and (not lightweight_archive):
             files_produced.append(f"{output_file_suffix}.png")
 
 
@@ -1196,17 +1204,19 @@ log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 #files_produced.append("index.ipynb")
 # Since cannot save the notebook, in JupyterLab, send the plots to a notebook
 # using Jupytext and then execute & save that notebook with the archive?
-plots4review_fn = f"plots4review_from-ba{now.strftime('%b%d%Y%H%M')}.ipynb"
-review_nb_stub = review_nb_stub.replace(
-    "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER",serial_fn)
-write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
-!jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
-files_produced.append(plots4review_fn)
-# next line removes the `.py` intermediate made in process to make 'review' nb
-!rm {plots4review_fn[:-6]+".py"}
-for_out2both = ("\nA Jupyter notebook listing the resulting plots for "
-    f"convenient reviewing\nhas been saved as `{plots4review_fn}`.")
-log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+if not lightweight_archive:
+    plots4review_fn = f"plots4review_from-ba{now.strftime('%b%d%Y%H%M')}.ipynb"
+    review_nb_stub = review_nb_stub.replace(
+        "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER",serial_fn)
+    write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
+    !jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
+    files_produced.append(plots4review_fn)
+    # next line removes the `.py` intermediate made in process to make 
+    # 'review' nb
+    !rm {plots4review_fn[:-6]+".py"}
+    for_out2both = ("\nA Jupyter notebook listing the resulting plots for "
+        f"convenient reviewing\nhas been saved as `{plots4review_fn}`.")
+    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 
 log_file_text += (f"\n\n#### THIS CONCLUDES THE RUN OF bendit analysis "
