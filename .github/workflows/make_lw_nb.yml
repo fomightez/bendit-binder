@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: copy index nb to lw nb
       run: cp index.ipynb lw.ipynb
-    - uses: ./.github/actions/spell-check
+    - uses: ./.github/actions/make_lw_nb
     - name: commit lw with ightweight_archive as true
       run: |
           git config --global user.name "GitHub Actions"
