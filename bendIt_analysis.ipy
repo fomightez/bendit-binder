@@ -267,6 +267,23 @@ def percent_GCcalc(items):
     '''
     return (items[0] + items[1])/items[2]
 
+def make_and_run_review_nb(now, review_nb_stub, serial_fn):
+    '''
+    Takes current datetime, a string that represents the notebook 'stub' (in a 
+    python script form that later is converted to a proper nb by Jupytext), and 
+    the file name of the serialized data and makesa Python script. It then 
+    converts that script to a notebook and runs it using jupytext. The produced 
+    notebook contains every plot displayed for review.
+
+    It returns the name of the notebook produced
+    '''
+    plots4review_fn = f"plots4review_from-ba{now.strftime('%b%d%Y%H%M')}.ipynb"
+    review_nb_stub = review_nb_stub.replace(
+        "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER",serial_fn)
+    write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
+    !jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
+    return plots4review_fn
+
 #######------------------END OF HELPER FUNCTIONS--------------------------######
 ################################################################################
 
@@ -1212,11 +1229,7 @@ log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 # Since cannot save the notebook, in JupyterLab, send the plots to a notebook
 # using Jupytext and then execute & save that notebook with the archive?
 if not lightweight_archive:
-    plots4review_fn = f"plots4review_from-ba{now.strftime('%b%d%Y%H%M')}.ipynb"
-    review_nb_stub = review_nb_stub.replace(
-        "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER",serial_fn)
-    write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
-    !jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
+    plots4review_fn = make_and_run_review_nb(now,review_nb_stub, serial_fn)
     files_produced.append(plots4review_fn)
     # next line removes the `.py` intermediate made in process to make 
     # 'review' nb
