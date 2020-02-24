@@ -404,7 +404,7 @@ if lightweight_archive:
     for_out2both = ("\n'lightweight_archive' setting used. The resulting "
         " archive will not\n include any 'raw' gnuplots, notebook for review "
         "of plots, or image files.\n The latter two can be made later from the "
-        "archive, if needed".format(demo_file_name))
+        "archive, if needed."
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 # Go through list of sequence_files and check if these are standard FASTA or if
@@ -901,7 +901,7 @@ for x in sequence_files:
         # 2. deleting the output files made, should be a png and text file
         !rm {fasta_file_name_for_merged}
         !rm {output_file_suffix}
-        if (not lightweight_archive) and (not include_gnuplots):
+        if (not include_gnuplots) or (lightweight_archive):
             !rm {output_file_suffix}.png
         if sequence_lengthened_to_not_cause_fault:
             !rm {fasta_file_name_for_other_end}
