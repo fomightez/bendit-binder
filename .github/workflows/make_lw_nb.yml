@@ -1,0 +1,24 @@
+name: Make a copy of index with lightweight_archive as true
+
+on: [push]
+
+jobs:
+  make_lw_nb:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: copy index nb to lw nb
+      run: cp index.ipynb lw.ipynb
+    - name: Run a multi-line script
+      run: |
+        echo Add other actions to build,
+        echo test, and deploy your project.
+    - name: commit lw with ightweight_archive as true
+      run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email 'actions@github.com'
+          git commit -am "make lw nb with lightweight_archive as true"
+          git push
+      
