@@ -21,7 +21,7 @@ import os
 import sys
 import pandas as pd
 import pyfaidx
-from halo import Halo
+from halo import HaloNotebook as Halo
 from IPython.utils import io
 import fnmatch
 import datetime
@@ -372,7 +372,7 @@ for ss,collected_dicts in seqs_dfs_and_plots_per_sample_set.items():
 ################################################################################
 #######------------------------MAIN SECTION-------------------------------######
 
-spinner = Halo(spinner='toggle5')
+spinner = Halo(text='Processing...', spinner='dots',color = 'magenta')
 spinner.start()
 
 
@@ -715,6 +715,8 @@ for x in sequence_files:
 
         # Plot the reported data
         #----------------------------------------------------------------------#
+        spinner.stop()  #turn off spinner so it doesn't make only the most 
+        # recent plot show
         import seaborn as sns
         import matplotlib.pyplot as plt
         sns.set_style("whitegrid")
@@ -889,6 +891,11 @@ for x in sequence_files:
         plt.show()
         sns.set() #resets to default, in case want to plot other things below; 
         # inherited from code for twin y-axes (secondary y-axis) with seaborn 
+
+        # And starting another spinner back up now allows the previous plot
+        # to remain as more data processed and sets up for next plot to display
+        spinner = Halo(text='Processing...', spinner='dots',color = 'magenta')
+        spinner.start()
 
 
     
@@ -1242,7 +1249,7 @@ sys.stderr.write("\n*****************DONE***********************************\n"
 # Delete the files that have been archived (except leave the demo sequence file 
 # so that development example can be run again easily)
 sys.stderr.write("\nCleaning up...be patient...\n")
-spinner = Halo(spinner='toggle5')
+spinner = Halo(text='Cleaning up...', spinner='dots',color = 'magenta')
 spinner.start()  
 if demo_file_name in files_produced:
     files_produced.remove(demo_file_name)
