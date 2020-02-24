@@ -29,12 +29,14 @@ ln -s ~/bendit/bin/bendIt bendIt
 
 # Add in ipywidgets extension so Halo works in notebook
 # Adding and enabling ipywidgets based on https://github.com/binder-examples/jupyter-extension/commit/63bd1a323a4bacead2afbfb3522f8053ffc39250
+# with an update to the jupyterlab install step, see https://ipywidgets.readthedocs.io/en/latest/user_install.html#installing-the-jupyterlab-extension,
+#  since I am using JupyterLab latest which at present is 1.2.6, and not 0.38 which the binder example uses
 # Realized Halo needs ipywidgets from 
 # https://github.com/manrajgrover/halo/pull/40 &
 # https://github.com/manrajgrover/halo/issues/32#issuecomment-354426261.
 jupyter contrib nbextension install --user
 jupyter nbextension enable --py widgetsnbextension
-jupyter labextension install @jupyter-widgets/jupyterlab-manager@0.38
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 # Upon addition of Jupytext, I was seeing it want to build when session launched. Seems
 # explained at https://jupytext.readthedocs.io/en/latest/install.html#jupytext-commands-in-jupyterlab
