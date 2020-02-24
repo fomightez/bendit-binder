@@ -12,4 +12,4 @@ FROM gcr.io/distroless/python3-debian10
 COPY --from=builder /app /app
 WORKDIR /app
 ENV PYTHONPATH /app
-CMD ["main.py"]
+CMD [".github/actions/make_lw_nb/main.py"]
