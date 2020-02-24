@@ -11,13 +11,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: copy index nb to lw nb
       run: cp index.ipynb lw.ipynb
-    - name: Run a multi-line script
-      run: |
-        with open("index.ipynb", 'r') as index_nb:
-          lines = index_nb.readlines()
-        lines = lines.replace('"lightweight_archive = False"','"lightweight_archive = True"')
-        with open("lw.ipynb", 'w') as output:
-          output.write(lines)
+    - uses: ./.github/actions/spell-check
     - name: commit lw with ightweight_archive as true
       run: |
           git config --global user.name "GitHub Actions"
