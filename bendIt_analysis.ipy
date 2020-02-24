@@ -404,7 +404,7 @@ if lightweight_archive:
     for_out2both = ("\n'lightweight_archive' setting used. The resulting "
         " archive will not\n include any 'raw' gnuplots, notebook for review "
         "of plots, or image files.\n The latter two can be made later from the "
-        "archive, if needed."
+        "archive, if needed.")
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 # Go through list of sequence_files and check if these are standard FASTA or if
