@@ -20,7 +20,8 @@ jobs:
     - uses: actions/checkout@v2
     # need to use approach at https://github.com/actions/checkout#fetch-all-history-for-all-tags-and-branches
     # to get both branches or otherwise when push to `lw` get 
-    # `! [rejected]  master -> lw (fetch first)....hint: Updates were rejected because the remote contains work that you do not have locally.` 
+    # `! [rejected]  master -> lw (fetch first)....hint: Updates were rejected because the remote contains work that you do not have locally.`
+    # Plus turned out I needed to checkout `lw` branch and them move index nb from master branch so need both branches. 
     - run: |
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
     #- name: copy index nb to lw nb #no need to copy now that using a separate branch
