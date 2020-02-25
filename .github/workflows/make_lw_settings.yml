@@ -18,6 +18,8 @@ jobs:
       with:
         python-version: 3.8
     - uses: actions/checkout@v2
+    # need to use approach here to get both branches or otherwise when push to `lw` get 
+    # `! [rejected]  master -> lw (fetch first)....hint: Updates were rejected because the remote contains work that you do not have locally.` 
     - run: |
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
     #- name: copy index nb to lw nb #no need to copy now that using a separate branch
