@@ -18,6 +18,8 @@ jobs:
       with:
         python-version: 3.8
     - uses: actions/checkout@v2
+    - run: |
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
     #- name: copy index nb to lw nb #no need to copy now that using a separate branch
     #run: cp index.ipynb lw.ipynb
     - run: python .github/workflows/make_lw_settings.py
