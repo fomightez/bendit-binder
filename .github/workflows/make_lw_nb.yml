@@ -1,6 +1,11 @@
 name: Make a copy of index with lightweight_archive as true
 
-on: [push]
+on:
+  push:
+    paths:
+    # only trigger this wokflow for changes to `index.ipynb`; based on
+    # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#onpushpull_requestpaths
+    - 'index.ipynb'
 
 jobs:
   make_lw_nb:
