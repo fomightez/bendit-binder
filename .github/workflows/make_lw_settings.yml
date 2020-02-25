@@ -1,0 +1,30 @@
+name: Make a copy of index with lightweight_archive as true in lw branch
+
+on:
+  push:
+    # Only trigger this wokflow for changes to `index.ipynb`; based on
+    # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#onpushpull_requestpaths
+    paths:
+    - 'index.ipynb'
+
+jobs:
+  make_lw_settings:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.7"
+    - uses: actions/checkout@v2
+    #- name: copy index nb to lw nb #no need to copy now that using a separate branch
+    #run: cp index.ipynb lw.ipynb
+    - run: python .github/workflows/make_lw_settings.py
+    - name: commit with lightweight_archive as true to lw branch
+      run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email 'actions@github.com'
+          git commit -am "make index nb with lightweight_archive as true"
+          git push origin master:lw
+      
