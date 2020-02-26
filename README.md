@@ -24,7 +24,7 @@ Software
 
 The bend.it software will be installed already in each active session launched from this repo. The bend.it software is available directly from the authors at [the Bend.it® Standalone version page at the Bend.it site](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_standalone).
 
-The software is described in [this scientific article](https://www.ncbi.nlm.nih.gov/pubmed/12824394) and much of the theory behind the bend.it software is described in [this scientific article](https://www.ncbi.nlm.nih.gov/pubmed/9109388).
+The software is described in [this scientific article](https://www.ncbi.nlm.nih.gov/pubmed/12824394), and much of the theory behind the bend.it software is described in [this scientific article](https://www.ncbi.nlm.nih.gov/pubmed/9109388).
 
 The [authors request](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_references) users cite:
 
