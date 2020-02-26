@@ -37,6 +37,7 @@ ln -s ~/bendit/bin/bendIt bendIt
 jupyter contrib nbextension install --user
 jupyter nbextension enable --py widgetsnbextension
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
+jupyter labextension install @jupyterlab/toc
 
 # Upon addition of Jupytext, I was seeing it want to build when session launched. Seems
 # explained at https://jupytext.readthedocs.io/en/latest/install.html#jupytext-commands-in-jupyterlab
