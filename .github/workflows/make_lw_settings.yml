@@ -18,7 +18,7 @@ jobs:
     # need to use approach at https://github.com/actions/checkout#fetch-all-history-for-all-tags-and-branches
     # to get both branches or otherwise when push to `lw` get 
     # `! [rejected]  master -> lw (fetch first)....hint: Updates were rejected because the remote contains work that you do not have locally.`
-    # Plus turned out I needed to checkout `lw` branch and them move index nb from master branch so need both branches. 
+    # Plus turned out I needed to checkout `lw` branch and replace it with a new version made from master. 
     - run: |
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
     #- name: copy index nb to lw nb #no need to copy now that using a separate branch
@@ -26,12 +26,15 @@ jobs:
     - name: update lw with current master branch
       # based on https://superuser.com/a/716824
       run: |
-          git checkout lw
-          git checkout master
+          git checkout lw #have to checkout in local first so branch there for tracking & then 
+          # can replace it with current master
+          git checkout master #switch back to master so can rename lw branch; rest based on
+          # on https://superuser.com/a/716824 except I delete the temp branch made for swapping
+          # out the old for the new branch newly made from master
           git branch -m lw old_lw
           git branch -m master lw
           git branch -D old_lw
-          # need to do Python script steps on lw and so check it out
+          # need to do Python script steps on lw branch and so check it out
           git checkout lw
     - run: python .github/workflows/make_lw_settings.py
     - name: commit with update lw branch having lightweight_archive as true in index nb
@@ -39,5 +42,5 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email 'actions@github.com'
           git commit -am "make index nb with lightweight_archive as true"
-          git push origin lw:lw --force
+          git push origin lw:lw --force # have to force or it says ' rejected because the tip of your current branch is behind its remote counterpart.'
       
