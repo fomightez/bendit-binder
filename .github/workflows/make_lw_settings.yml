@@ -1,12 +1,9 @@
-on:
-  push:
-    # Only trigger this wokflow for changes to `index.ipynb`; based on
-    # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#onpushpull_requestpaths
-    paths:
-    - 'index.ipynb'
+name: Keep lw branch current and with index having lightweight_archive as true 
+
+on: push
 
 jobs:
-  make_lw_settings:
+  update_lw_settings:
 
     runs-on: ubuntu-latest
 
@@ -26,14 +23,15 @@ jobs:
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
     #- name: copy index nb to lw nb #no need to copy now that using a separate branch
     #run: cp index.ipynb lw.ipynb
-    - name: move to working in the lw branch & get the index nb from master
+    - name: update lw with current master branch
+      # based on https://superuser.com/a/716824
       run: |
+          git checkout master
+          git merge -s ours lw
           git checkout lw
-          # next copy index nb from master to lw branch based on 
-          # https://stackoverflow.com/a/307872/8508004
-          git checkout master index.ipynb
+          git merge master
     - run: python .github/workflows/make_lw_settings.py
-    - name: commit with lightweight_archive as true to lw branch
+    - name: commit with update lw branch having lightweight_archive as true in index nb
       run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email 'actions@github.com'
