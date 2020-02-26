@@ -26,10 +26,11 @@ jobs:
     - name: update lw with current master branch
       # based on https://superuser.com/a/716824
       run: |
-          git checkout master
-          git merge -s ours lw
+          git branch -m lw old_lw
+          git branch -m master lw
+          git branch -D old_lw
+          # need to do next steps on lw and so check it out
           git checkout lw
-          git merge master
     - run: python .github/workflows/make_lw_settings.py
     - name: commit with update lw branch having lightweight_archive as true in index nb
       run: |
