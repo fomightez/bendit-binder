@@ -26,8 +26,9 @@ jobs:
     - name: update lw with current master branch
       # based on https://superuser.com/a/716824
       run: |
+          git checkout lw
           git checkout master
-          git merge -s ours origin/lw
+          git merge -s ours lw
           git checkout lw
           git merge master
     - run: python .github/workflows/make_lw_settings.py
