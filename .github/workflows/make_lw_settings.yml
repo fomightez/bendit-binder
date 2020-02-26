@@ -39,6 +39,5 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email 'actions@github.com'
           git commit -am "make index nb with lightweight_archive as true"
-          git pull origin lw
-          git push origin lw:lw
+          git push origin lw:lw --force
       
