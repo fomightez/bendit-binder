@@ -355,7 +355,6 @@ review_nb_stub ='''# ---
 # For ease of review, use JupyterLab to place 'views' of this notebook side-by-side. As many as seem reasonable to fill your screen width.
 
 import pickle
-# %matplotlib notebook
 serial_fn = "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER"
 with open(serial_fn, "rb") as f:
     seqs_dfs_and_plots_per_sample_set = pickle.load(f)
