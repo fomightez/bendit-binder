@@ -713,8 +713,8 @@ for x in sequence_files:
             # Verify the values at the merge point are indeed the same. They 
             # should not diverge until farther down.
             assert (
-                df.iloc[point_to_merge_at-1].Predicted_curvature == 
-                df_oth.iloc[point_to_merge_at-1].Predicted_curvature),("The "
+                df.iloc[point_to_merge_at-3].Predicted_curvature == 
+                df_oth.iloc[point_to_merge_at-3].Predicted_curvature),("The "
                 "values for curvature just before the merge point should be "
                 "the same.")
             assert (
