@@ -712,10 +712,7 @@ for x in sequence_files:
             #print("point_to_merge_at:",point_to_merge_at)  # FOR DEBUGING ONLY
             # Verify the values at the merge point are indeed the same. They 
             # should not diverge until farther down.
-            assert (
-                df.iloc[point_to_merge_at][df.columns[-2]] == 
-                df_oth.iloc[point_to_merge_at][df_oth.columns[-2]]),("The "
-                "values at the merge point should be the same.")
+            
             # Merge to the left-hand side of original round
             df=pd.concat(
                 [df[:point_to_merge_at],df_oth[point_to_merge_at:]], axis=0)
