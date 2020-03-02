@@ -573,11 +573,10 @@ for x in sequence_files:
         # `merged_sequence` and then I can possibly add to that string if it is
         # still too short without altering the true `merged_sequence`
         merged_sequence_with_linebreaks = merged_sequence
-        cutoff_for_adding = 2300
+        cutoff_for_adding = 2175
         if len(merged_sequence_with_linebreaks) < cutoff_for_adding:
-            # make it at least 2300
-            merged_sequence_with_linebreaks += "T" * (
-                cutoff_for_adding - len(merged_sequence))
+            # make it at least 2175
+            merged_sequence_with_linebreaks += merged_sequence*28
             sequence_lengthened_to_not_cause_fault = True
         else:
             sequence_lengthened_to_not_cause_fault = False
@@ -661,8 +660,7 @@ for x in sequence_files:
         # This route to avoid the segmentation fault has been verified to give 
         # the same results as the bend.it server with numerous sequences.
         if sequence_lengthened_to_not_cause_fault:
-            sequence_for_otherend_with_linebreaks = "T" * (
-                cutoff_for_adding - len(merged_sequence)) + merged_sequence
+            sequence_for_otherend_with_linebreaks = merged_sequence * 29
             sequence_for_otherend_with_linebreaks = "\n".join(
                 chunk_string(sequence_for_otherend_with_linebreaks,70))
             sequence_for_other_end_made_to_fasta = (
@@ -715,9 +713,10 @@ for x in sequence_files:
             # Verify the values at the merge point are indeed the same. They 
             # should not diverge until farther down.
             assert (
-                df.iloc[point_to_merge_at].Predicted_curvature == 
-                df_oth.iloc[point_to_merge_at].Predicted_curvature),("The "
-                "values for curvature at the merge point should be the same.")
+                df.iloc[point_to_merge_at-1].Predicted_curvature == 
+                df_oth.iloc[point_to_merge_at-1].Predicted_curvature),("The "
+                "values for curvature just before the merge point should be "
+                "the same.")
             assert (
                 df.iloc[point_to_merge_at][df.columns[-2]] == 
                 df_oth.iloc[point_to_merge_at][df_oth.columns[-2]]),("The "
@@ -799,9 +798,9 @@ for x in sequence_files:
                              ax=ax1)
             plt.legend()
         else:
-        	# Note that here I use the columns for the other reported metric 
-        	# by referencing the end of the columns list because the first few
-        	# columns may be different depending if sequence was included.
+            # Note that here I use the columns for the other reported metric 
+            # by referencing the end of the columns list because the first few
+            # columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
             # so plot on secondary y-axis; use of secondary y-axis with seaborn based on 
             # https://towardsdatascience.com/a-step-by-step-guide-for-creating-advanced-python-data-visualizations-with-seaborn-matplotlib-1579d6a1a7d0
