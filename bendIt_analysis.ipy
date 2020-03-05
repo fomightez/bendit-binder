@@ -552,8 +552,8 @@ for x in sequence_files:
     for sequence in sequence_entries:
         sample_name = sequence.name.split(
             character_to_mark_individual_sample_name_end)[0]
-        sequences_processed_keyed_on_name[sample_name] = str(sequence)
-        merged_sequence = f"{up_bracket}{sequence}{down_bracket}"
+        sequences_processed_keyed_on_name[sample_name] = str(sequence).strip()
+        merged_sequence = f"{up_bracket}{str(sequence).strip()}{down_bracket}"
         merged_sequences_processed_keyd_on_name[sample_name] = merged_sequence
         # make a fasta file (with a single sequence) out of the merged sequence
         fasta_file_name_for_merged = f"{sample_name}_merged.fasta"
