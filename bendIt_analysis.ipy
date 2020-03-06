@@ -1251,21 +1251,19 @@ sys.stderr.write("\n*****************DONE***********************************\n"
 #------------------------------------------------------------------------------#  
 # Delete the files that have been archived (except leave the demo sequence file 
 # so that development example can be run again easily)
-'''
-sys.stderr.write("\nCleaning up...be patient...\n")
-spinner = Halo(text='Cleaning up...', spinner='dots',color = 'magenta')
-spinner.start()  
-if demo_file_name in files_produced:
-    files_produced.remove(demo_file_name)
+if cleaning_step:
+    sys.stderr.write("\nCleaning up...be patient...\n")
+    spinner = Halo(text='Cleaning up...', spinner='dots',color = 'magenta')
+    spinner.start()  
+    if demo_file_name in files_produced:
+        files_produced.remove(demo_file_name)
+    for ef in files_produced:
+        !rm {ef}
+    # Delete the `temp` files from the making of the dataframes step; they were used 
+    # for the checking of the two sets of data bendIt reports.
+    !rm results_parsing_temp*.tsv
 
-for ef in files_produced:
-    !rm {ef}
-# Delete the `temp` files from the making of the dataframes step; they were used 
-# for the checking of the two sets of data bendIt reports.
-!rm results_parsing_temp*.tsv
-
-spinner.stop()
-sys.stderr.write("\nCleaning complete.")
-'''
+    spinner.stop()
+    sys.stderr.write("\nCleaning complete.")
 #######------------------END OF MAIN SECTION------------------------------######
 ################################################################################
