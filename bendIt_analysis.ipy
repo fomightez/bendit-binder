@@ -1,11 +1,11 @@
 # bendIt_analysis.ipy
 __author__ = "Wayne Decatur" #fomightez on GitHub
 __license__ = "MIT"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 # bendIt_analysis.ipy by Wayne Decatur
-# ver 0.2.0
+# ver 0.2.1
 #
 #*******************************************************************************
 # 
@@ -557,9 +557,9 @@ for x in sequence_files:
         merged_sequences_processed_keyd_on_name[sample_name] = merged_sequence
         # make a fasta file (with a single sequence) out of the merged sequence
         fasta_file_name_for_merged = f"{sample_name}_merged.fasta"
-        # if merged sequence is actually less than 1019 (although found in other 
+        # If merged sequence is actually less than 1019 (although found in other 
         # testing the exact number varies and sometimes will be around 1040 or 
-        # 1030) then add dummy sequence to make it longer than that or 
+        # 1030) then add repeats of the sequence to make it longer than that or 
         # otherwise get 
         # 'Segmentation fault (core dumped)' because it seeme the value at the
         # 5th base goes to infinity and crashes the process. Doesn't happen with
@@ -567,19 +567,56 @@ for x in sequence_files:
         # it shouldn't matter. Going to round up a bit from 1019 since it seemed
         # the exact cutoff differed in different sessions as it could possibly
         # be tied to available computing power what cutoff raises the issue.
+        # Was originally using dummy sequence of a string of `T`s to add in turn
+        # to each end but was finding result for predicted curvature value for
+        # last position that gives a curvature value other than zero wasn't 
+        # matching what bend.it server gives for that position. Also by testing
+        # addition of strings of different nucleotides of same length was noting
+        # the identity the nucleotides of the string added affected result even
+        # though number of nucleotides added same. So sequence somehow effects
+        # it and upon testing adding repeats I found for sequences of varying
+        # length that I could add certain multiples of repeats and then get the
+        # value for the last curvature reporting position the same as bend.it
+        # server reports. This was actually worked out with sequences long 
+        # enough to not throw segmentation error so I could track a series of 
+        # repeats, starting with none (just the input sequence) up to around 50
+        # as a I lengthened the sequence. Interestingly depedning on length of
+        # the sequence I would see different multiples of repeats work. For 
+        # example, one sequence always worked but I found the addition of 21,7,
+        # or 3 repeats seemed to work depending on length. Interstingly, all
+        # these intersect at 21 and multiples of 21 (42 is only one I check but 
+        # assume beyond) work. So that is probably easiest to work with instead
+        # of determinr best value for each length below the cutofff. I believe
+        # the 21 magic number comes from there being 10.5 bases per helical turn
+        # and so the effect of the previous sequence on the curvature of the 
+        # last position reporting curvature is the same when it is phased into
+        # the same relative position of the sequence with the same helical
+        # surface properties proceeding it. Note that I did sometimes see the
+        # curvature value for this last position vary by 0.0001 from what the
+        # bend.it server reported for 21 repeats but never more. This is a 
+        # respectable deviation from what the bend.ot server reports because I 
+        # can say the value for that last position agrees always to a thousandth 
+        # of a decimal and actually never varies by more than 0.0001. And that 
+        # seemsreasonable deviaiton to accept for convenience of being able to 
+        # implement this with one repeat value.
+
         # Because need to know the size of merged_sequence without line breaks,
         # and also before any additional sequence POSSIBLY added, going to
         # to first assign the string that will get linebreaks direct from 
         # `merged_sequence` and then I can possibly add to that string if it is
         # still too short without altering the true `merged_sequence`
         merged_sequence_with_linebreaks = merged_sequence
-        cutoff_for_adding = 2175
+        cutoff_for_adding = 1041
         if len(merged_sequence_with_linebreaks) < cutoff_for_adding:
-            # make it at least 2175
-            merged_sequence_with_linebreaks += merged_sequence*28
-            sequence_lengthened_to_not_cause_fault = True
+            # if the sequence alone is not long enough to avoid a segmentation
+            # error when bendIt command is run, add repeats of the sequence to
+            # insure it is long enough and that the far right end can be mined
+            # for what the sequence at the end would give if no additional 
+            # sequence added
+            merged_sequence_with_linebreaks += merged_sequence*21
+            sequence_repeated_to_not_cause_fault = True
         else:
-            sequence_lengthened_to_not_cause_fault = False
+            sequence_repeated_to_not_cause_fault = False
         merged_sequence_with_linebreaks = "\n".join(
             chunk_string(merged_sequence_with_linebreaks,70)) # `t.fasta` that 
         # came in the bendit `test` folder has 70 bases per line and in some 
@@ -607,9 +644,10 @@ for x in sequence_files:
         
         # Use the merged sequence and the settings to run bendIt.
         # Note that in order to get the standalone version to work and not give
-        # give a segmentation fault and dump the core, I had to add sequences
-        # to at least 1019 in length and then would just limit plot here
-        # to what I was really interested unsing `--xmin` & --xmax` options so
+        # give a segmentation fault and dump the core, I had to use multiples
+        # of the input sequence in cases it was shorter than around 1040. The 
+        # bendIt command always produces a gnuplot and to make it match mostly
+        # to the input merged squence can use  --xmin` & --xmax` options so
         # plot is at least for range I care about. I don't plan to use these 
         # plots for anything but review in development but seems could be useful
         # for development for them to plot the data of interest.
@@ -649,53 +687,30 @@ for x in sequence_files:
         log_file_text += captured.stdout
         log_file_text += captured.stderr
 
-        # If the sequence had to be lengthened at the right-hand side 
-        # (downstream end/ 3'-end) to avoid segmentation fault when bendIt 
-        # runs, the right-hand side of the sequence will be affected by the 
-        # dummy sequence that was added. To get data for that end that isn't 
-        # affected by additional sequence, here the sequence is lengthened at 
-        # the left-hand side (upstream end/ 5'-end) to avoid segmentation fault 
-        # when bendIt runs, and then the data bendIt reports for that right-hand 
-        # end from that run is used to replace the data reported in first round. 
+        # If the sequence had to be repeated multiple times because it otherwise
+        # would have been short and caused asegmentation fault when bendIt 
+        # runs, the right-hand side of the initial sequence will be affected by 
+        # the addiitonal repeats downstream. To get data for that end that isn't 
+        # affected by additional sequence, the far end on the right, i.e., the 
+        # end of the last repeat will be used to substitute in for that end. And 
+        # because the right number of repeats was used the value for the last 
+        # reported curvature will be as it would be if only the inut sequence 
+        # has been used because the effect from the side of the helix will
+        # match. Note this ends up also being more efficent then when the dummy 
+        # sequence was being used because in tht case I used to add sequence
+        # at  the left-hand side (upstream end/ 5'-end) to avoid segmentation 
+        # fault and run that through the bendIt command again and process the 
+        # datat from that round to get data I thought would be useful for the 
+        # right-hand side. (Turns out it was good for most values but not for 
+        # the last reported curvature value.)
         # This route to avoid the segmentation fault has been verified to give 
-        # the same results as the bend.it server with numerous sequences.
-        if sequence_lengthened_to_not_cause_fault:
-            sequence_for_otherend_with_linebreaks = merged_sequence * 29
-            sequence_for_otherend_with_linebreaks = "\n".join(
-                chunk_string(sequence_for_otherend_with_linebreaks,70))
-            sequence_for_other_end_made_to_fasta = (
-                f">{sample_name}OTHER_END\n"
-                f"{sequence_for_otherend_with_linebreaks}")
-            fasta_file_name_for_other_end = f"{sample_name}_mergedOE.fasta"
-            write_string_to_file(
-                sequence_for_other_end_made_to_fasta, 
-                fasta_file_name_for_other_end)
-            start_like_unadded = (cutoff_for_adding - len(merged_sequence))
-            output_file_suffixOE = f"{sample_name}OE_output"
-            with io.capture_output() as captured:
-                !bendIt -s {fasta_file_name_for_other_end} -o \
-                {output_file_suffixOE} -c \
-                {curvature_window_size} -b {other_metric_reporting_window_size} \
-                -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
-                --xmin {start_like_unadded}
-                df_oth = bendit_standalone_results_to_df(
-                    output_file_suffixOE,
-                    results_to_df_corrspndnce[report_with_curvature],
-                    sequence_file=fasta_file_name_for_other_end,
-                    pickle_df=False)
-            log_file_text += captured.stdout
-            log_file_text += captured.stderr
-            # need to remove the 'front' additional from this dataframe
-            df_oth = df_oth[start_like_unadded:].reset_index(drop=True)
-            # `reset_index` takes care of index being shifted when remove the
-            # extra nts just added to get past segmentation fault with short
-            # sequence, but also need to shift the position values back down to
-            # original sequence range.
-            df_oth.Position = df_oth.Position - start_like_unadded
-            #print("len(df_oth):",len(df_oth)) # FOR DEBUGING ONLY
-            #print("len(df):",len(df)) # FOR DEBUGING ONLY
-            #print("len(merged_sequence):",len(merged_sequence)) # FOR DEBUGING ONLY
-            # Set up merging it to the left-hand side of original round
+        # the same results as the bend.it server to within a thousandth of a 
+        # decimal with numerous sequences. In fact, I never saw more than a 
+        # 0.0001 difference, with any difference being a very rare occurence.
+        # Substituing in the data from the far right hand side to the end of 
+        # the input seqeunce.
+        if sequence_repeated_to_not_cause_fault:
+            # Set up merging it to the left-hand side of original input sequence
             point_to_merge_at = (end_range - ((curvature_window_size + 3) + 2))#
             # The `+ 3` portion comes from the fact bendability is calculated for 
             # trinucloetide values as dicussed at http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_theory 
@@ -710,12 +725,33 @@ for x in sequence_files:
             # so when at that point the curvature values in the dataframe from 
             # the first round and where sequence added at other end now same.
             #print("point_to_merge_at:",point_to_merge_at)  # FOR DEBUGING ONLY
+            point_to_merge_at_far_end = (len(df) - (
+                (curvature_window_size + 3) )) # don't need to subtract 
+            # window from length of df because the df comes from bendIt results 
+            # which have removed it.  I think I don't also need the +2 because
+            # of zero indexing relative the length and want one after the merge 
+            # point for the right side.
             # Verify the values at the merge point are indeed the same. They 
-            # should not diverge until farther down.
-            
-            # Merge to the left-hand side of original round
+            # should not diverge until slightly farther down.
+            assert (
+                df.iloc[point_to_merge_at].Predicted_curvature == 
+                df.iloc[point_to_merge_at_far_end].Predicted_curvature),("The "
+                "values for curvature at the merge point should be the same.")
+            assert (
+                df.iloc[point_to_merge_at][df.columns[-2]] == 
+                df.iloc[point_to_merge_at_far_end][df.columns[-2]]),("The "
+                "values at the merge point should be the same.")
+            # Merge the parts
             df=pd.concat(
-                [df[:point_to_merge_at],df_oth[point_to_merge_at:]], axis=0)
+                [df[:point_to_merge_at-1],df[point_to_merge_at_far_end:]], 
+                axis=0)
+            df = df.reset_index(drop=True) # rest the index because don't need
+            # the high index values after the mege point showing up and the 
+            # fixed index values can be used to fix the positions
+            # Need to fix the position numbers after the merge point. Can just 
+            # make all set relative the index and it will fix the end ones too.
+            df.Position = df.index + curvature_window_size
+
 
 
 
@@ -790,7 +826,7 @@ for x in sequence_files:
                              ax=ax1)
             plt.legend()
         else:
-            # Note that here I use the columns for the other reported metric 
+            # Note that here I use the columns for the other reported metric
             # by referencing the end of the columns list because the first few
             # columns may be different depending if sequence was included.
             ax2 = ax1.twinx() # complexity and GC content need their own scale 
@@ -917,10 +953,7 @@ for x in sequence_files:
         !rm {output_file_suffix}
         if (not include_gnuplots) or (lightweight_archive):
             !rm {output_file_suffix}.png
-        if sequence_lengthened_to_not_cause_fault:
-            !rm {fasta_file_name_for_other_end}
-            !rm {output_file_suffixOE}
-            !rm {output_file_suffixOE}.png
+
 
         
 
