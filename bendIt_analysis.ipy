@@ -786,7 +786,7 @@ for x in sequence_files:
                 akima1 = Akima1DInterpolator(df.Position, df.Predicted_curvature)
                 akima2 = Akima1DInterpolator(df.Position, df.Bendability)
                 x_4smooth = np.linspace(
-                    min(df.Position), len(merged_sequence), 1000)
+                    min(df.Position), max(df.Position), 1000)
                 sns.lineplot(x=x_4smooth,
                             y=akima1(x_4smooth),
                             label="Curvature",
