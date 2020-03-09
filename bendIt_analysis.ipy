@@ -743,8 +743,7 @@ for x in sequence_files:
                 "values at the merge point should be the same.")
             # Merge the parts
             df=pd.concat(
-                [df[:point_to_merge_at-1],df[point_to_merge_at_far_end:]], 
-                axis=0)
+                [df[:point_to_merge_at],df[point_to_merge_at_far_end:]], axis=0)
             df = df.reset_index(drop=True) # rest the index because don't need
             # the high index values after the mege point showing up and the 
             # fixed index values can be used to fix the positions
