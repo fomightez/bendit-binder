@@ -738,8 +738,8 @@ for x in sequence_files:
                 df.iloc[point_to_merge_at_far_end].Predicted_curvature),("The "
                 "values for curvature at the merge point should be the same.")
             assert (
-                df.iloc[point_to_merge_at][df.columns[-2]] == 
-                df.iloc[point_to_merge_at_far_end][df.columns[-2]]),("The "
+                df.iloc[point_to_merge_at][df.columns[-1]] == 
+                df.iloc[point_to_merge_at_far_end][df.columns[-1]]),("The "
                 "values at the merge point should be the same.")
             # Merge the parts
             df=pd.concat(
