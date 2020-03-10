@@ -1,4 +1,4 @@
-jupyterlab>=1.2.4
+jupyterlab>=2.0.1
 pyfaidx
 pandas
 matplotlib
