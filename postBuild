@@ -34,7 +34,7 @@ ln -s ~/bendit/bin/bendIt bendIt
 # Jupyter-archive both started complaining/breaking around same time & clearly in https://github.com/mwouts/jupytext/releases/tag/1.4.0 it says JupyterLab 1.x 
 # isn't compatible with latest and even though jupytext command line worked still, I thought Jupyter-archive breaking might be fixed by bumping to 2.01.
 # and it seemed it did; had to speccify `jupyterlab>=2.0.1` in requierments because despite 2.0.1 being out with `jupyterlab>=1.2.4` it wasn't updating
-# until changed), and not 0.38 which the binder example uses (STILL??). 
+# until changed), & not 0.38 which the binder example used when I started using JLab 1 (just checked & now seems 1.2.6 on binder by default now). 
 # Realized Halo needs ipywidgets from 
 # https://github.com/manrajgrover/halo/pull/40 &
 # https://github.com/manrajgrover/halo/issues/32#issuecomment-354426261.
