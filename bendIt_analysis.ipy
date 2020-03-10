@@ -613,7 +613,8 @@ for x in sequence_files:
             # insure it is long enough and that the far right end can be mined
             # for what the sequence at the end would give if no additional 
             # sequence added
-            merged_sequence_with_linebreaks += merged_sequence*21
+            while len(merged_sequence_with_linebreaks) < cutoff_for_adding:
+                merged_sequence_with_linebreaks += merged_sequence*21
             sequence_repeated_to_not_cause_fault = True
         else:
             sequence_repeated_to_not_cause_fault = False
@@ -1079,6 +1080,13 @@ for x in sequence_files:
         cassette_nt_counts[sn] = collections.Counter(seq_str.upper())
         assert len(cassette_nt_counts[sn]) <= 4, ("There should only be "
             f"G,A,T,or C in count of cassette nts of {sn}.")
+        expect_nts = ["G","A","T","C"]
+        if len(cassette_nt_counts[sn]) < 4:
+            # add zeroes for any missing nucleotides so later uses of those 
+            # columns don't cause errors
+            for nt in expect_nts:
+                if nt not in cassette_nt_counts[sn]:
+                    cassette_nt_counts[sn][nt] = 0
         to_add_seq_to_df.append(seq_str.upper()) 
     cassette_nt_count_df = pd.DataFrame.from_dict(
         cassette_nt_counts, orient='index').fillna(0)
@@ -1113,6 +1121,12 @@ for x in sequence_files:
         merged_nt_counts[sn] = collections.Counter(seq_str.upper())
         assert len(merged_nt_counts[sn]) <= 4, ("There should only be "
             f"G,A,T,or C in count of nts of merged {sn}.")
+        if len(merged_nt_counts[sn]) < 4:
+            # add zeroes for any missing nucleotides so later uses of those 
+            # columns don't cause errors
+            for nt in expect_nts:
+                if nt not in merged_nt_counts[sn]:
+                    merged_nt_counts[sn][nt] = 0
     merged_nt_count_df = pd.DataFrame.from_dict(
         merged_nt_counts, orient='index').fillna(0)
     # It seems for columns that include a zero fill on nt count, the dtype gets 
