@@ -505,7 +505,7 @@ seqs_dfs_and_plots_per_sample_set = {} #overarching collection keyed by sample
 # set; each set of items keyed by sample will go into this as a list
 dataframes_produced_keyed_by_sample = {}
 plots_produced_keyed_by_sample = {}
-for x in sequence_files:
+for indxf,x in enumerate(sequence_files):
     # determine if label for the name of the sample set is on first line or if
     # using file name or defined `sample_set_name`
     label_in_fasta = False
@@ -549,7 +549,7 @@ for x in sequence_files:
     from pyfaidx import Fasta
     sequence_entries = Fasta(x, read_long_names=True)
     #print(len(sequence_entries))  # FOR DEBUGING ONLY
-    for sequence in sequence_entries:
+    for indxe,sequence in enumerate(sequence_entries):
         sample_name = sequence.name.split(
             character_to_mark_individual_sample_name_end)[0]
         sequences_processed_keyed_on_name[sample_name] = str(sequence).strip()
@@ -940,7 +940,9 @@ for x in sequence_files:
 
         # And starting another spinner back up now allows the previous plot
         # to remain as more data processed and sets up for next plot to display
-        spinner = Halo(text='Processing...', spinner='dots',color = 'magenta')
+        spinner = Halo(
+            text=f'Processing file #{indxf+1} entry #{indxe+1}...', 
+            spinner='dots',color = 'magenta')
         spinner.start()
 
 
