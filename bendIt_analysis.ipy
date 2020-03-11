@@ -19,6 +19,7 @@ __version__ = "0.2.1"
 # 
 import os
 import sys
+import glob
 import pandas as pd
 import pyfaidx
 from halo import HaloNotebook as Halo
@@ -420,7 +421,8 @@ if lightweight_archive:
     for_out2both = ("\n'lightweight_archive' setting used. The resulting "
         " archive will not\n include any 'raw' gnuplots, notebook for review "
         "of plots, or image files.\n The latter two can be made later from the "
-        "archive, if needed.")
+        "archive, if needed. The LOG file\nwill not report on individual "
+        "sequence processing.\n")
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 # Go through list of sequence_files and check if these are standard FASTA or if
@@ -941,7 +943,7 @@ for indxf,x in enumerate(sequence_files):
         # And starting another spinner back up now allows the previous plot
         # to remain as more data processed and sets up for next plot to display
         spinner = Halo(
-            text=f'Processing file #{indxf+1} entry #{indxe+1}...', 
+            text=f'Processing file #{indxf+1} entry #{indxe+1} ...', 
             spinner='dots',color = 'magenta')
         spinner.start()
 
@@ -954,11 +956,15 @@ for indxf,x in enumerate(sequence_files):
         # Clean up by:
         # 1. deleting the temporarily made fasta file
         # 2. deleting the output files made, should be a png and text file
+        # 3. reset log_file_text if lightweight
         !rm {fasta_file_name_for_merged}
         !rm {output_file_suffix}
         if (not include_gnuplots) or (lightweight_archive):
             !rm {output_file_suffix}.png
 
+        if lightweight_archive:
+            log_file_text = "    --LOGS OF INDIVIDUAL SEQUENCE PROCESSING \
+            SCRUBBED TO KEEP LIGHTWEIGHT--\n\n\n"
 
         
 
@@ -1225,7 +1231,8 @@ for indxf,x in enumerate(sequence_files):
         ]
 
     #plus delete the `.fai` files made when processing current sequence file
-    !rm *.fai
+    fai_fns = glob.glob('*.fai')
+    [os.remove(x) for x in fai_fns]
 
 
 
@@ -1257,9 +1264,13 @@ serial_fn = "seqs_dfs_and_plots_for_each_set.pkl"
 with open(serial_fn, "wb") as f:
     pickle.dump(seqs_dfs_and_plots_per_sample_set, f)
 files_produced.append(serial_fn)
-for_out2both = ("\n\nIn addition to individal tabular data and plot images, "
-    "records of\nwhat was procesed and results have\nbeen serialized for later "
-    f"use as `{serial_fn}`.")
+if lightweight_archive:
+    for_out2both = ("\n\nWhat was procesed and results have\nbeen "
+        f"serialized for later use as `{serial_fn}`.")
+else:
+    for_out2both = ("\n\nIn addition to individal tabular data and plot "
+        "images, records of\nwhat was procesed and results have\nbeen "
+        f"serialized for later use as `{serial_fn}`.")
 log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 
