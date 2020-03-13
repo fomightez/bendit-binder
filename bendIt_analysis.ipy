@@ -553,7 +553,7 @@ for indxf,x in enumerate(sequence_files):
     #print(len(sequence_entries))  # FOR DEBUGING ONLY
     for indxe,sequence in enumerate(sequence_entries):
         sample_name = sequence.name.split(
-            character_to_mark_individual_sample_name_end)[0]
+            character_to_mark_individual_sample_name_end)[0].strip()
         sequences_processed_keyed_on_name[sample_name] = str(sequence).strip()
         merged_sequence = f"{up_bracket}{str(sequence).strip()}{down_bracket}"
         merged_sequences_processed_keyd_on_name[sample_name] = merged_sequence
