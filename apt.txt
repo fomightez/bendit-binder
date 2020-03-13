@@ -2,3 +2,5 @@ gnuplot
 texlive-xetex
 texlive-fonts-recommended
 texlive-generic-recommended
+zip
+unzip
