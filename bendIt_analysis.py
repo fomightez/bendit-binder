@@ -1,11 +1,11 @@
-# bendIt_analysis.ipy
+# bendIt_analysis.py
 __author__ = "Wayne Decatur" #fomightez on GitHub
 __license__ = "MIT"
-__version__ = "0.2.2"
+__version__ = "0.1.0"
 
 
-# bendIt_analysis.ipy by Wayne Decatur
-# ver 0.2.2
+# bendIt_analysis.py by Wayne Decatur
+# ver 0.1.0
 #
 #*******************************************************************************
 # 
@@ -16,10 +16,16 @@ __version__ = "0.2.2"
 # use this is to launch sessions by clicking on the `launch bend.it` badge at
 # that repo. In the session that comes up, everything will already be installed
 # and presented to the user for processing.
+# Originally written as an Ipython script, `bendIt_analysis.ipy` v.0.2.2, it has 
+# been converted to pure Python. Offers considerable speed advantage too, 
+# (50 minutes originally down to 9.5 for 658 sequences of around 75 bp total) 
+# probably because not making all those separate shells for file deletions, etc.
 # 
 import os
 import sys
 import glob
+from shutil import copyfile
+import subprocess
 import pandas as pd
 import pyfaidx
 from halo import HaloNotebook as Halo
@@ -164,7 +170,6 @@ def sanitize_description_lines(fn,delimiter_character):
         # actually run in global namespace which cannot see Python variable `fn`
         # local to the function
         sanitized_fn_name = f"unsanitized_input_{fn}.txt"
-        from shutil import copyfile
         copyfile(fn, sanitized_fn_name) #adding extension means it won't get 
         # recognized as a FASTA if script is run again
         sys.stderr.write("The original input was saved as '{}' because "
@@ -189,7 +194,8 @@ def strip_off_first_line(fn,set_name,character_to_mark_set_name_end):
     '''
     name_for_f_without_first_line = (
         f"{set_name}{character_to_mark_set_name_end}set.fa")
-    !tail -n +2 {fn} >{name_for_f_without_first_line} 
+    #!tail -n +2 {fn} >{name_for_f_without_first_line} 
+    os.system(f"tail -n +2 {fn} >{name_for_f_without_first_line}")
     return name_for_f_without_first_line
 
 def divide_up_any_additional_sets(f,character_to_mark_set_name_end):
@@ -213,7 +219,8 @@ def divide_up_any_additional_sets(f,character_to_mark_set_name_end):
     # can parse contents while possibly overwriting the input file with a
     # shorter version if a label for a set encountered inside it
     temp_file_name = "temp_copy.fa"
-    !cp {f} {temp_file_name}
+    #!cp {f} {temp_file_name}
+    copyfile(f, temp_file_name)
     # set up some variables for holding assignments as go through line by line
     additional_sequence_files = []
     current_string = ""
@@ -266,7 +273,8 @@ def divide_up_any_additional_sets(f,character_to_mark_set_name_end):
         additional_sequence_files.append(current_file_to_write_to)
     #clean up by deleting the copy of the input that was used to iterate line by
     #line while possibly modifying original fasta file.
-    !rm {temp_file_name}
+    #!rm {temp_file_name}
+    os.remove(temp_file_name)
     return additional_sequence_files
 
 def percent_GCcalc(items):
@@ -293,7 +301,8 @@ def make_and_run_review_nb(now, review_nb_stub, serial_fn):
     review_nb_stub = review_nb_stub.replace(
         "PICKLED_SEQS_DFS_N_PLOTS_FILE_PLACEHOLDER",serial_fn)
     write_string_to_file(review_nb_stub, plots4review_fn[:-6]+".py")
-    !jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
+    #!jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}
+    os.system(f'jupytext --to notebook --execute {plots4review_fn[:-6]+".py"}')
     return plots4review_fn
 
 #######------------------END OF HELPER FUNCTIONS--------------------------######
@@ -305,7 +314,8 @@ def make_and_run_review_nb(now, review_nb_stub, serial_fn):
 # bother seeing if possible.
 for file in os.listdir('.'):
     if file == "start":
-        !rm start
+        #!rm start
+        os.remove("start")
 
 
 
@@ -467,7 +477,15 @@ for x in sequence_files:
     if sample_set_name_extract_auto:
         #check if label for the name of the sample set is on first line by
         # checking if first `>` on second line
-        first_two_lines_list = !head -2 {x}
+        #first_two_lines_list = !head -2 {x} #when use that it goes to a string 
+        # and not bytes but the subprocess way produces byets so changed to add 
+        # conversion to string so didn't need to change any other code below
+        first_two_lines_list = subprocess.check_output(
+            f"head -2 {x}", shell=True).split()
+        first_two_lines_list = (
+            [ft.decode("utf-8") for ft in first_two_lines_list]) #the subprocess
+        # way produces byets so changed to add conversion to string so didn't 
+        # need to change any other code below
         if ((not first_two_lines_list[0].startswith('>')) and (
             first_two_lines_list[1].startswith('>'))):
             label_in_fasta = True
@@ -525,7 +543,13 @@ for indxf,x in enumerate(sequence_files):
     if sample_set_name_extract_auto:
         #check if label for the name of the sample set is on first line by
         # checking if first `>` on second line
-        first_two_lines_list = !head -2 {x}
+        #first_two_lines_list = !head -2 {x}
+        first_two_lines_list = subprocess.check_output(
+            f"head -2 {x}", shell=True).split()
+        first_two_lines_list = (
+            [ft.decode("utf-8") for ft in first_two_lines_list]) #the subprocess
+        # way produces byets so changed to add conversion to string so didn't 
+        # need to change any other code below
         if ((not first_two_lines_list[0].startswith('>')) and (
             first_two_lines_list[1].startswith('>'))):
             label_in_fasta = True
@@ -668,10 +692,17 @@ for indxf,x in enumerate(sequence_files):
         end_range = len(merged_sequence) - curvature_window_size
         output_file_suffix = f"{sample_name}_output"
         with io.capture_output() as captured:
+            '''
             !bendIt -s {fasta_file_name_for_merged} -o {output_file_suffix} -c \
             {curvature_window_size} -b {other_metric_reporting_window_size} \
             -g {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
             --xmin {curvature_window_size} --xmax {end_range}
+            '''
+            os.system(f"bendIt -s {fasta_file_name_for_merged} -o \
+                {output_file_suffix} -c {curvature_window_size} -b \
+                {other_metric_reporting_window_size} -g \
+                {report_with_curvature_settings_corrspndnce[report_with_curvature]} \
+                --xmin {curvature_window_size} --xmax {end_range}")
 
             # POST PROCESS RESULTS:
             #------------------------------------------------------------------#
@@ -683,7 +714,10 @@ for indxf,x in enumerate(sequence_files):
             # Get a file if not yet retrieved / check if file exists
             file_needed = "bendit_standalone_results_to_df.py"
             if not os.path.isfile(file_needed):
-                !curl -OL https://raw.githubusercontent.com/fomightez/sequencework/master/bendit_standalone-utilities/{file_needed}
+                #!curl -OL https://raw.githubusercontent.com/fomightez/sequencework/master/bendit_standalone-utilities/{file_needed}
+                os.system("curl -OL https://raw.githubusercontent.com/"\
+                    "fomightez/sequencework/master/"\
+                    f"bendit_standalone-utilities/{file_needed}")
 
             # convert to a dataframe
             from bendit_standalone_results_to_df import bendit_standalone_results_to_df
@@ -968,10 +1002,13 @@ for indxf,x in enumerate(sequence_files):
         # 1. deleting the temporarily made fasta file
         # 2. deleting the output files made, should be a png and text file
         # 3. reset log_file_text if lightweight
-        !rm {fasta_file_name_for_merged}
-        !rm {output_file_suffix}
+        #!rm {fasta_file_name_for_merged}
+        #!rm {output_file_suffix}
+        os.remove(fasta_file_name_for_merged)
+        os.remove(output_file_suffix)
         if (not include_gnuplots) or (lightweight_archive):
-            !rm {output_file_suffix}.png
+            #!rm {output_file_suffix}.png
+            os.remove(f"{output_file_suffix}.png")
 
         if lightweight_archive:
             log_file_text = lw_note_text + "\n\n    --LOGS OF INDIVIDUAL \
@@ -1306,7 +1343,8 @@ if not lightweight_archive:
     files_produced.append(plots4review_fn)
     # next line removes the `.py` intermediate made in process to make 
     # 'review' nb
-    !rm {plots4review_fn[:-6]+".py"}
+    #!rm {plots4review_fn[:-6]+".py"}
+    os.remove(plots4review_fn[:-6]+".py")
     for_out2both = ("\nA Jupyter notebook listing the resulting plots for "
         f"convenient reviewing\nhas been saved as `{plots4review_fn}`.")
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
@@ -1323,7 +1361,8 @@ files_produced.append(log_file_name)
 # Make the archive from the run
 archive_file_name = f"bendit_analysis{now.strftime('%b%d%Y%H%M')}.tar.gz"
 #print(files_produced) # FOR DEBUGGING ONLY
-!tar czf {archive_file_name} {" ".join(files_produced)}
+#!tar czf {archive_file_name} {" ".join(files_produced)}
+os.system(f'tar czf {archive_file_name} {" ".join(files_produced)}')
 sys.stderr.write("\n*****************DONE***********************************\n"
     "{} generated. Download it.\n"
     "*****************DONE***********************************".format(
@@ -1341,10 +1380,13 @@ if cleaning_step:
     if demo_file_name in files_produced:
         files_produced.remove(demo_file_name)
     for ef in files_produced:
-        !rm {ef}
+        #!rm {ef}
+        os.remove(ef)
     # Delete the `temp` files from the making of the dataframes step; they were used 
     # for the checking of the two sets of data bendIt reports.
-    !rm results_parsing_temp*.tsv
+    #!rm results_parsing_temp*.tsv
+    results_parsing_temp_tsvs = glob.glob('results_parsing_temp*.tsv')
+    [os.remove(rtsv) for rtsv in results_parsing_temp_tsvs]
 
     spinner.stop()
     sys.stderr.write("\nCleaning complete.")
