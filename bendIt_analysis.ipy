@@ -1,11 +1,11 @@
 # bendIt_analysis.ipy
 __author__ = "Wayne Decatur" #fomightez on GitHub
 __license__ = "MIT"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 
 # bendIt_analysis.ipy by Wayne Decatur
-# ver 0.2.1
+# ver 0.2.2
 #
 #*******************************************************************************
 # 
@@ -34,6 +34,17 @@ demo_file_name = "demo_sample_set.fa"
 fasta_extensions = ("fa", "fasta", "faa", "fas", "fsa")
 
 
+
+if lightweight_with_images:
+    # use lightweight settings but also make plot images
+    lightweight_archive = True
+    make_images = True
+elif not lightweight_archive:
+    # use standard settings that includes making plot images
+    make_images = True
+else:
+    make_images = False
+    
 
 
 
@@ -418,12 +429,12 @@ else:
     log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
 
 if lightweight_archive:
-    for_out2both = ("\n'lightweight_archive' setting used. The resulting "
+    lw_note_text = ("\n'lightweight_archive' setting used. The resulting "
         " archive will not\n include any 'raw' gnuplots, notebook for review "
         "of plots, or image files.\n The latter two can be made later from the "
         "archive, if needed. The LOG file\nwill not report on individual "
         "sequence processing.\n")
-    log_file_text = out2_stderr_n_log(for_out2both,log_file_text)
+    log_file_text = out2_stderr_n_log(lw_note_text,log_file_text)
 
 # Go through list of sequence_files and check if these are standard FASTA or if
 # combine sample set label(s) and FASTA record(s). Although the most noticeable 
@@ -963,8 +974,8 @@ for indxf,x in enumerate(sequence_files):
             !rm {output_file_suffix}.png
 
         if lightweight_archive:
-            log_file_text = "    --LOGS OF INDIVIDUAL SEQUENCE PROCESSING \
-            SCRUBBED TO KEEP LIGHTWEIGHT--\n\n\n"
+            log_file_text = lw_note_text + "\n\n    --LOGS OF INDIVIDUAL \
+            SEQUENCE PROCESSING SCRUBBED TO KEEP LIGHTWEIGHT--\n\n\n"
 
         
 
@@ -979,15 +990,25 @@ for indxf,x in enumerate(sequence_files):
         df_tsv_nom = f'{prefix_4_df_pkl_n_plot_file_saves}.tsv'
         df.to_csv(df_tsv_nom, sep='\t',index = False)
         files_produced.append(df_tsv_nom)
-        if not lightweight_archive:
+
+        # if lightweight_with_images used then want to make the images, but 
+        # since lightweight still don't include them in the archive
+        if make_images:
             plot_png_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.png"
             fig.savefig(plot_png_nom)
-            files_produced.append(plot_png_nom)
             plot_svg_nom = f"{prefix_4_df_pkl_n_plot_file_saves}.svg"
             fig.savefig(plot_svg_nom) #vector graphics best for directly scaling
+        if not lightweight_archive:
+            files_produced.append(plot_png_nom)
             files_produced.append(plot_svg_nom)
+
+        
         dataframes_produced_keyed_by_sample[sample_name] = df
-        plots_produced_keyed_by_sample[sample_name] = fig
+        if lightweight_archive:
+            plots_produced_keyed_by_sample[sample_name] = "saving serialized \
+            Python plot object scrubbed due to `lightweight` setting"
+        else:
+            plots_produced_keyed_by_sample[sample_name] = fig
 
         if include_gnuplots and (not lightweight_archive):
             files_produced.append(f"{output_file_suffix}.png")
