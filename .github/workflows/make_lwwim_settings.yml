@@ -1,0 +1,45 @@
+name: Keep lwwim branch current and with index having lightweight_with_images as true 
+
+on: push
+
+jobs:
+  update_lwwim_settings:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: install nbformat
+      run: pip install nbformat
+    - uses: actions/checkout@v2
+    # need to use approach at https://github.com/actions/checkout#fetch-all-history-for-all-tags-and-branches
+    # to get both branches or otherwise when push to `lwwim` get 
+    # `! [rejected]  master -> lw (fetch first)....hint: Updates were rejected because the remote contains work that you do not have locally.`
+    # Plus turned out I needed to checkout `lwwim` branch and replace it with a new version made from master. 
+    - run: |
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+    #- name: copy index nb to lwwim nb #no need to copy now that using a separate branch
+    #run: cp index.ipynb lwwim.ipynb
+    - name: update lwwim with current master branch
+      # based on https://superuser.com/a/716824
+      run: |
+          git checkout lwwim #have to checkout in local first so branch there for tracking & then 
+          # can replace it with current master
+          git checkout master #switch back to master so can rename lwwim branch; rest based on
+          # on https://superuser.com/a/716824 except I delete the temp branch made for swapping
+          # out the old for the new branch newly made from master
+          git branch -m lwwim old_lwwim
+          git branch -m master lwwim
+          git branch -D old_lwwim
+          # need to do Python script steps on lwwim branch and so check it out
+          git checkout lwwim
+    - run: python .github/workflows/make_lwwim_settings.py
+    - name: commit with update lwwim branch having lightweight_archive as true in index nb
+      run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email 'actions@github.com'
+          git commit -am "make index nb with lightweight_archive as true"
+          git push origin lwwim:lwwim --force # have to force or it says ' rejected because the tip of your current branch is behind its remote counterpart.'
