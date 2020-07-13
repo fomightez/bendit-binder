@@ -4,6 +4,7 @@ pandas
 matplotlib
 seaborn
 biopython
+logomaker
 ipywidgets
 jupyter_contrib_nbextensions
 halo
