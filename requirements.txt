@@ -3,6 +3,7 @@ pyfaidx
 pandas
 matplotlib
 seaborn
+biopython
 ipywidgets
 jupyter_contrib_nbextensions
 halo
