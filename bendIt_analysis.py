@@ -112,7 +112,7 @@ def sanitize_description_lines(fn,delimiter_character):
 
     Extra sanitizing added when I found bendIt/bash didn't work with `|` or 
     parantheses in the file names which I was using the description line as.
-    Will use position of closing paranthesis at end to get away using same 
+    Will use position of closing parantheses at end to get away using same 
     indicator character for both since running out of unusual characters to use.
     Use of `+` from https://superuser.com/questions/358855/what-characters-are-safe-in-cross-platform-file-names-for-linux-windows-and-os
     (I wonder if these listed at 
@@ -291,7 +291,7 @@ def make_and_run_review_nb(now, review_nb_stub, serial_fn):
     '''
     Takes current datetime, a string that represents the notebook 'stub' (in a 
     python script form that later is converted to a proper nb by Jupytext), and 
-    the file name of the serialized data and makesa Python script. It then 
+    the file name of the serialized data and makes a Python script. It then 
     converts that script to a notebook and runs it using jupytext. The produced 
     notebook contains every plot displayed for review.
 
@@ -478,13 +478,13 @@ for x in sequence_files:
         #check if label for the name of the sample set is on first line by
         # checking if first `>` on second line
         #first_two_lines_list = !head -2 {x} #when use that it goes to a string 
-        # and not bytes but the subprocess way produces byets so changed to add 
+        # and not bytes but the subprocess way produces bytes so changed to add 
         # conversion to string so didn't need to change any other code below
         first_two_lines_list = subprocess.check_output(
             f"head -2 {x}", shell=True).split()
         first_two_lines_list = (
             [ft.decode("utf-8") for ft in first_two_lines_list]) #the subprocess
-        # way produces byets so changed to add conversion to string so didn't 
+        # way produces bytes so changed to add conversion to string so didn't 
         # need to change any other code below
         if ((not first_two_lines_list[0].startswith('>')) and (
             first_two_lines_list[1].startswith('>'))):
@@ -745,17 +745,17 @@ for indxf,x in enumerate(sequence_files):
         # reported curvature will be as it would be if only the inut sequence 
         # has been used because the effect from the side of the helix will
         # match. Note this ends up also being more efficent then when the dummy 
-        # sequence was being used because in tht case I used to add sequence
-        # at  the left-hand side (upstream end/ 5'-end) to avoid segmentation 
+        # sequence was being used because in that case I used to add sequence
+        # at the left-hand side (upstream end/ 5'-end) to avoid segmentation 
         # fault and run that through the bendIt command again and process the 
-        # datat from that round to get data I thought would be useful for the 
+        # data from that round to get data I thought would be useful for the 
         # right-hand side. (Turns out it was good for most values but not for 
         # the last reported curvature value.)
         # This route to avoid the segmentation fault has been verified to give 
         # the same results as the bend.it server to within a thousandth of a 
         # decimal with numerous sequences. In fact, I never saw more than a 
         # 0.0001 difference, with any difference being a very rare occurence.
-        # Substituing in the data from the far right hand side to the end of 
+        # Substituting in the data from the far right hand side to the end of 
         # the input seqeunce.
         if sequence_repeated_to_not_cause_fault:
             # Set up merging it to the left-hand side of original input sequence
