@@ -631,11 +631,11 @@ for indxf,x in enumerate(sequence_files):
         # surface properties proceeding it. Note that I did sometimes see the
         # curvature value for this last position vary by 0.0001 from what the
         # bend.it server reported for 21 repeats but never more. This is a 
-        # respectable deviation from what the bend.ot server reports because I 
-        # can say the value for that last position agrees always to a thousandth 
-        # of a decimal and actually never varies by more than 0.0001. And that 
-        # seemsreasonable deviaiton to accept for convenience of being able to 
-        # implement this with one repeat value.
+        # respectable deviation from what the bend.it server reports because I 
+        # can say the value for that last position agrees always to a 
+        # ten-thousandth of a decimal and actually never varies by more than 
+        # 0.0001. And that seems a reasonable deviaiton to accept for the
+        # convenience of being able to implement this with one repeat value.
 
         # Because need to know the size of merged_sequence without line breaks,
         # and also before any additional sequence POSSIBLY added, going to
@@ -752,7 +752,7 @@ for indxf,x in enumerate(sequence_files):
         # right-hand side. (Turns out it was good for most values but not for 
         # the last reported curvature value.)
         # This route to avoid the segmentation fault has been verified to give 
-        # the same results as the bend.it server to within a thousandth of a 
+        # the same results as the bend.it server to within a ten-thousandth of a 
         # decimal with numerous sequences. In fact, I never saw more than a 
         # 0.0001 difference, with any difference being a very rare occurence.
         # Substituting in the data from the far right hand side to the end of 
