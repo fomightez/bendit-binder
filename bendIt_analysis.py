@@ -623,19 +623,20 @@ for indxf,x in enumerate(sequence_files):
         # or 3 repeats seemed to work depending on length. Interstingly, all
         # these intersect at 21 and multiples of 21 (42 is only one I check but 
         # assume beyond) work. So that is probably easiest to work with instead
-        # of determinr best value for each length below the cutofff. I believe
-        # the 21 magic number comes from there being 10.5 bases per helical turn
-        # and so the effect of the previous sequence on the curvature of the 
-        # last position reporting curvature is the same when it is phased into
-        # the same relative position of the sequence with the same helical
-        # surface properties proceeding it. Note that I did sometimes see the
-        # curvature value for this last position vary by 0.0001 from what the
-        # bend.it server reported for 21 repeats but never more. This is a 
-        # respectable deviation from what the bend.it server reports because I 
-        # can say the value for that last position agrees always to a 
-        # ten-thousandth of a decimal and actually never varies by more than 
-        # 0.0001. And that seems a reasonable deviaiton to accept for the
-        # convenience of being able to implement this with one repeat value.
+        # of determining the best value for each length below the cutofff. I 
+        # believe the magic number 21 comes from there being 10.5 bases per
+        #  helical turn, & so the effect of the previous sequence on the 
+        # curvature of the last position reporting curvature is the same when 
+        # it is phased into the same relative position of the sequence with the
+        # same helical surface properties proceeding it. Note that I did 
+        # rarely, yet sometimes, see the curvature value for this last position
+        # vary by 0.0001 from what the bend.it server reported for 21 repeats 
+        # but never more. This is a respectable deviation from what the bend.it
+        # server reports because I can say the value for that last position 
+        # agrees always to a ten-thousandth of a decimal & actually never varies
+        # by more than 0.0001. And that seems a reasonable deviaiton to accept 
+        # for the convenience of being able to implement this with one repeat 
+        # value.
 
         # Because need to know the size of merged_sequence without line breaks,
         # and also before any additional sequence POSSIBLY added, going to
