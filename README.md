@@ -51,11 +51,46 @@ If you are just trying to analyze a few sequences, go to the [the bend.it Server
 
 This repository is set up to allow running the command line, standalone version of bend.it software after pressing the `launch bendit` button above or below. 
 
-In the notebooks that can be launched, I have added some examples illustrating how to use the program and process the results easily with Python and convert to other forms.
+In the notebooks that can be launched, I have added some examples illustrating how to use the program and process the results easily with Python and convert to other forms. Once you have a sense of how it works, it will be easy to open a new session and upload your own sequences and run the cells to let the pipeline process them.
 
 
-Technical Details
------------------
+## Details accompanying the Methods section of Knutson laboratory publication, Munoff et al., originally utilizing this pipeline
+
+<details>
+  <summary>Click to expand!</summary>
+  
+  Here we provide an environment and pipeline stitched together with Jupyter and Python, and served via MyBinder.org, featuring the standalone program from Vlahovicek et al. (2003) at the core to calculate values for bendability and curvature of the sequences in a high-throughput manner. The implementation has been designed in a manner designed to minimize required human interaction while guiding processing of however many sequences (FASTA format) into associated data, additional metrics, plots, and reports of bendability and curvature all packaged into a single compressed archive. Numerous options for customizing the produced output exist.
+
+  #### Accommodating short sequences in conjunction with the standalone version of bend.it software & assessment of the implementation:
+
+  - The standalone version of bend.it software fails with a segmentation fault when provided with a short sequence (~ 75 bp) directly for some reason. The online [bend.it Server](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_form) doesn't exhibit this behavior and processes 75 bp sequences just fine. To work past this issue so that the standalone version of bend.it software could still be used for ease in scaling up processing of hundreds of sequences, the sequences to examine were repeated in multiples of 21 to exceed a size of 1041 bp in total length of the sequence input. This route to avoid the segmentation fault has been verified to give the same results as the bend.it server to within a ten-thousandth of a decimal with numerous sequences. In fact, I never saw more than a 0.0001 difference, with any difference being a very rare occurrence, and most importantly the tiny difference was only ever observed associated with the predicted curvature value for the last position.
+
+  - In the course of limited testing, noted nearly 850 sequences (of length 75 bp) and associated files & reports all processed in about 14 minutes with the standard pipeline.
+ 
+  ##### ADDITIONAL FEATURES BUILT IN:
+  
+  - Runs right in any browser window with no software installation necessary thanks to [MyBinder.org](https://mybinder.org/) serving temporary active Jupyter session with an environment defined by configuration files included in this repository. (See the [MyBinder](https://mybinder.org/) site for more information about Binder/MyBinder.)
+  
+  - Constant upstream and downstream sequences flanking all the sequences to be processed can be specified. The provided sequences are thus considered variable 'cassettes' in the analysis. (The option exists though for setting the either 'constant' flanking sequence to an empty string.)
+  
+  - Allows for easy dragging and dropping of files from local computer into the session to allow for adding input sequences in FASTA format.
+	
+   - processes any number of sequences, even if provided in multiple files, as long as the sequences are provided in FASTA format and the extension for the file(s) matches typical FASTA extension.
+   - [Seaborn](https://seaborn.pydata.org/) plots meant to supplant the default gnuplot plots made in the course of the standalone version of bend.it software running. The Seaborn plots aesthetically match the Excel versions of the plot used in the initial stages for visualization before scaling became imperative. Besides being more visually refined than the default gnuplot plots, the Seaborn plots offer advanced portability/storage and customization options in the Python/Jupyter ecosystem.
+   
+   - Because the dataframe underlying each plot is saved in both a compressed and tabular text form (tab-delimited), plots can be generated on-demand later, or the collected data used with other plotting software.
+
+   - A notebook that serves as a 'Guide to accessing and reviewing the bendit results' is included that covers what the default pipeline produces and how to access it. Furthermore, it touches on how to use Jupyter/Python to conveniently view and further process all the data.
+
+   - There's several settings for customizing what gets archived at the conclusion of the runs.
+
+   - Upon update of the main branch, GitHub Actions automatically generate git branches with certain settings differing from the defaults. With the branches made, the environment with those settings in place can be specifically launched via MyBinder. For example, there is a lightweight setting option where the archive is streamlined to not include several of the typical items that add up to a lot of space in the archive, such as a notebook with all the Seaborn plots, separate image files from each plot, and the raw gnuplots. Additionally, in the lightweight setting the logs are scrubbed of the records of the underlying steps collected in the course of processing each individual sequence at run time.
+
+   - A notebook showing how to run the standalone version of bend.it software in the launched sessions is also present in the repository.
+
+</details>
+
+#### Technical Reminder for Those Modifying this Repository
 
 This repository is set up to make use of the binder service offered by [MyBinder.org](https://mybinder.org/). See their site for more information about Binder.
 
