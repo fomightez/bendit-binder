@@ -6,7 +6,6 @@ seaborn
 biopython
 logomaker
 ipywidgets
-jupyter_contrib_nbextensions
 halo
 jupytext
 jupyter-archive
