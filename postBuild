@@ -27,24 +27,3 @@ mkdir -p ~/.local/bin
 cd ~/.local/bin
 ln -s ~/bendit/bin/bendIt bendIt
 
-# Add in ipywidgets extension so Halo works in notebook
-# Adding and enabling ipywidgets based on https://github.com/binder-examples/jupyter-extension/commit/63bd1a323a4bacead2afbfb3522f8053ffc39250
-# with an update to the jupyterlab install step, see https://ipywidgets.readthedocs.io/en/latest/user_install.html#installing-the-jupyterlab-extension,
-# since I am using JupyterLab latest which is now ay 2.0.1. at present (it was 1.2.6 for most of development time; updated to 2.0.1 when Jupytext and 
-# Jupyter-archive both started complaining/breaking around same time & clearly in https://github.com/mwouts/jupytext/releases/tag/1.4.0 it says JupyterLab 1.x 
-# isn't compatible with latest and even though jupytext command line worked still, I thought Jupyter-archive breaking might be fixed by bumping to 2.01.
-# and it seemed it did; had to speccify `jupyterlab>=2.0.1` in requierments because despite 2.0.1 being out with `jupyterlab>=1.2.4` it wasn't updating
-# until changed), & not 0.38 which the binder example used when I started using JLab 1 (just checked & now seems 1.2.6 on binder by default now). 
-# Realized Halo needs ipywidgets from 
-# https://github.com/manrajgrover/halo/pull/40 &
-# https://github.com/manrajgrover/halo/issues/32#issuecomment-354426261.
-jupyter contrib nbextension install --user
-jupyter nbextension enable --py widgetsnbextension
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
-jupyter labextension install @jupyterlab/toc
-
-# Upon addition of Jupytext, I was seeing it want to build when session launched. Seems
-# explained at https://jupytext.readthedocs.io/en/latest/install.html#jupytext-commands-in-jupyterlab
-# >"The Jupytext extension for JupyterLab is bundled with Jupytext. Installing Jupytext will trigger a build of JupyterLab the next time you open it. If you prefer, you can trigger the build manually with `jupyter lab build`"
-# Trying that here to avoid it later showing pop-up about it.
-jupyter lab build
