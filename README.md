@@ -69,7 +69,7 @@ In the notebooks that can be launched, I have added some examples illustrating h
  
   ##### ADDITIONAL FEATURES BUILT IN:
   
-  - Runs right in any browser window with no software installation necessary thanks to [MyBinder.org](https://mybinder.org/) serving temporary active Jupyter session with an environment defined by configuration files included in this repository. (See the [MyBinder](https://mybinder.org/) site for more information about Binder/MyBinder.)
+  - Runs right in any browser with no software installation necessary thanks to [MyBinder.org](https://mybinder.org/) serving temporary active Jupyter session with an environment defined by configuration files included in this repository. (See the [MyBinder](https://mybinder.org/) site for more information about Binder/MyBinder.)
   
   - Constant upstream and downstream sequences flanking all the sequences to be processed can be specified. The provided sequences are thus considered variable 'cassettes' in the analysis. (The option exists though for setting the either 'constant' flanking sequence to an empty string.)
   
