@@ -57,7 +57,7 @@ In the notebooks that can be launched, I have added some examples illustrating h
 ## Details accompanying the Methods section of Knutson laboratory publication, Munoff et al., originally utilizing this pipeline
 
 <details>
-  <summary>Click to expand!</summary>
+  <summary>Click here to expand!</summary>
   
   Here we provide an environment and pipeline stitched together with Jupyter and Python, and served via MyBinder.org, featuring the standalone program from Vlahovicek et al. (2003) at the core to calculate values for bendability and curvature of the sequences in a high-throughput manner. The implementation has been designed in a manner designed to minimize required human interaction while guiding processing of however many sequences (FASTA format) into associated data, additional metrics, plots, and reports of bendability and curvature all packaged into a single compressed archive. Numerous options for customizing the produced output exist.
 
@@ -94,7 +94,7 @@ In the notebooks that can be launched, I have added some examples illustrating h
 
 #### Technical Reminder for Those Modifying this Repository
 
-Because of the GitHub Actions to update branches after a push, it is necessary to execute a `git pull` shortly after each push to keep the local version consistent with the GitHub version.
+Because of the GitHub Actions to update branches after a push, you'll notice executing a 'git pull' after any push from local will yield changes to local. I try to execute a `git pull` shortly after each push to keep the local version consistent with the GitHub version; however, it isn't necessary. I find that fortunately if you push changes to the main branch without pulling first, it won't cause a warning that remote has unincorporated changes.
 
 #### Service Providing Active Sessions in Your Browser
 
