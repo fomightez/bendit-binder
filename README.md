@@ -90,6 +90,8 @@ In the notebooks that can be launched, I have added some examples illustrating h
 
 </details>
 
+-------------
+
 #### Technical Reminder for Those Modifying this Repository
 
 Because of the GitHub Actions to update branches after a push, it is necessary to execute a `git pull` shortly after each push to keep the local version consistent with the GitHub version.
