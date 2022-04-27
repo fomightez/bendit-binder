@@ -94,7 +94,12 @@ In the notebooks that can be launched, I have added some examples illustrating h
 
 #### Technical Reminder for Those Modifying this Repository
 
-Because of the GitHub Actions to update branches after a push, you'll notice executing a `git pull` right after any push from local will yield recent changes. I try to execute a `git pull` shortly after each push to keep the local version consistent with the GitHub version; however, it isn't necessary. I find that if you push changes to the main branch without pulling first, fortunately, it won't cause a block, or even warning, that remote has unincorporated changes.
+<details>
+  <summary>Click here to expand!</summary>
+
+  Because of the GitHub Actions to update branches after a push, you'll notice executing a `git pull` right after any push from local will yield recent changes. I try to execute a `git pull` shortly after each push to keep the local version consistent with the GitHub version; however, it isn't necessary. I find that if you push changes to the main branch without pulling first, fortunately, it won't cause a block, or even warning, that remote has unincorporated changes.
+
+</details>
 
 #### Service Providing Active Sessions in Your Browser
 
