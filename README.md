@@ -92,7 +92,11 @@ In the notebooks that can be launched, I have added some examples illustrating h
 
 #### Technical Reminder for Those Modifying this Repository
 
-This repository is set up to make use of the binder service offered by [MyBinder.org](https://mybinder.org/). See their site for more information about Binder.
+Because of the GitHub Actions to update branches after a push, it is necessary to execute a `git pull` shortly after each push to keep the local version consistent with the GitHub version.
+
+#### Service Providing Active Sessions in Your Browser
+
+This repository is set up to make use of the Binder service offered by [MyBinder.org](https://mybinder.org/). See [their site](https://mybinder.org/) for more information about Binder.
 
 
 ----
