@@ -88,6 +88,8 @@ In the notebooks that can be launched, I have added some examples illustrating h
 
    - A notebook showing how to run the standalone version of bend.it software in the launched sessions is also present in the repository.
 
+   - The jupyter-archive extension is present to make it covenient to make archives of entire directories using the JupyterLab interface, without need to write and execute a command.
+
 </details>
 
 -------------
