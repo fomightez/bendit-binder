@@ -18,7 +18,7 @@ Click any `launch bendit` badge on this page to run command line-based, standalo
 
 [Bend.it](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_intro) software to predict DNA curvature from DNA sequences combined with the power of [the Jupyter ecosystem](https://jupyter.org/) served via [MyBinder.org](https://mybinder.org/).
 
-If you are just trying to analyze a few sequences, go to the [the bend.it Server](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_form).
+If you are just trying to analyze a few sequences, go to [the bend.it Server](http://pongor.itk.ppke.hu/dna/bend_it.html#/bendit_form).
 
 This repository is for running a command line-based, standalone version of bend.it inside your browser in a Jupyter environment provided by [MyBinder.org](https://mybinder.org/).  
 Additionally, having bend.it working inside the Jupyter environment with interactive Python adds some convenient features that are illustrated.  A utility script for moving command line-based bendIt results into Python is demonstrated and the pipeline illustrates adding in more full-featured, modern and interactive plotting as discussed [here](https://berthub.eu/articles/posts/from-gnuplot-to-matplotlib-pandas/).  
