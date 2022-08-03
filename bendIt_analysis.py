@@ -67,7 +67,7 @@ def write_string_to_file(s, fn):
 def out2_stderr_n_log(s,log_file_text):
     '''
     Takes a string as input and sends it to the stderr as well as to a building
-    string that will everntually get saved as a Log file.
+    string that will eventually get saved as a Log file.
     Also needs the Log file to be sent in because gets assigned within the
     function in order to add to it. Returns the modified `log_file_text`.
     '''
