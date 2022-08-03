@@ -17,7 +17,7 @@ __version__ = "0.1.0"
 # that repo. In the session that comes up, everything will already be installed
 # and presented to the user for processing.
 # Originally written as an Ipython script, `bendIt_analysis.ipy` v.0.2.2, it has 
-# been converted to pure Python. Offers considerable speed advantage too, 
+# been converted to pure Python. Offers considerable speed advantage, too: 
 # (50 minutes originally down to 9.5 for 658 sequences of around 75 bp total) 
 # probably because not making all those separate shells for file deletions, etc.
 # 
