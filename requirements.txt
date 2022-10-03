@@ -1,6 +1,7 @@
 jupyterlab>=3.0.1
 pyfaidx
 pandas
+scipy
 matplotlib
 seaborn
 biopython
