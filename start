@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# clean up a bit since will be using the starting directory to work
+# clean up a bit since will be using the starting directory to work in the session;
+# this will make it easier to see the produced items when the analysis pipeline is run
 rm requirements.txt
 rm postBuild
 rm apt.txt
 rm README.md
-
+rm -rf details_on_versions_noted_when_all_working
 
 
 # this must be last line according to 
