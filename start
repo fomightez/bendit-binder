@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# clean up a bit since will be using the starting directory to work in the session;
+# clean up / declutter a bit since will use the starting directory to work in the session;
 # this will make it easier to see the produced items when the analysis pipeline is run
 rm requirements.txt
 rm postBuild
