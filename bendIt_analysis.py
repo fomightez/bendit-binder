@@ -1176,7 +1176,7 @@ for indxf,x in enumerate(sequence_files):
     n = int(cols.index('seq'))
     cols = [cols[n]] + cols[:n] + cols[n+1:]
     cassette_nt_count_df = cassette_nt_count_df[cols]
-    cassette_nt_count_df["Total_nts"] = cassette_nt_count_df.sum(1)
+    cassette_nt_count_df["Total_nts"] = cassette_nt_count_df.sum(1, numeric_only = True)
     cassette_nt_count_df['%G+C'] = (
         cassette_nt_count_df[['C','G','Total_nts']].apply(
         percent_GCcalc, axis=1))
