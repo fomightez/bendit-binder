@@ -1,6 +1,6 @@
 gnuplot
 texlive-xetex
 texlive-fonts-recommended
-texlive-generic-recommended
+texlive-latex-recommended
 zip
 unzip
