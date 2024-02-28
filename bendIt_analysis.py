@@ -285,7 +285,7 @@ def percent_GCcalc(items):
     Taken from 
     `GSD Adding_percentGC_to_nt_counts_for_mito_genomes_from_1011_collection.ipynb`
     '''
-    return (items[0] + items[1])/items[2]
+    return (items.iloc[0] + items.iloc[1])/items.iloc[2]
 
 def make_and_run_review_nb(now, review_nb_stub, serial_fn):
     '''
